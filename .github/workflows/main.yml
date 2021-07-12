@@ -23,11 +23,11 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 5.0.x
+          dotnet-version: 3.1.x
 
       # Publish the site
       - name: Publish
-        run: dotnet publish GPXRide.csproj -c Release -o public -p:GHPages=true -p:PublishTrimmed=false
+        run: dotnet publish GPXRide.csproj -c Release -o public -p:GHPages=true
 
       # Deploy the site
       - name: Deploy
