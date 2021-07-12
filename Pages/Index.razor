@@ -177,7 +177,7 @@
         });
 
         await Task.Delay(1000);
-        convertTask.State = convertTask.ConvertedItineraryFile != null ? ConvertState.Error : ConvertState.Error;
+        convertTask.State = convertTask.ConvertedItineraryFile != null ? ConvertState.Completed : ConvertState.Error;
     }
 
     private async Task UploadFiles(InputFileChangeEventArgs e)
