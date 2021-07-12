@@ -27,7 +27,7 @@ jobs:
 
       # Publish the site
       - name: Publish
-        run: dotnet publish GPXRide.csproj -c Release -o public -p:GHPages=true
+        run: dotnet publish GPXRide.csproj -c Release -o public -p:GHPages=true -p:PublishTrimmed=false
 
       # Deploy the site
       - name: Deploy
