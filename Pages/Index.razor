@@ -185,22 +185,24 @@
         bool errorOnUpload = false;
         var entries = e.GetMultipleFiles();
         
-
         foreach (var fileentry in entries)
         {
-
             try
             {
+                Log.Debug("Deserialize GPX File...");
                 var gpxFile = await Gpx11SerializerAsync.DeserializeAsync(fileentry.OpenReadStream());
-
+                
                 if (gpxFile != null)
                 {
+                    Log.Debug(("Done"));
+                    Log.Debug("Creating and adding new ConvertTask..");
                     ConvertTasks.Add(new ConvertTask()
                     {
                         Id = ConvertTasks.Any() ? (ConvertTasks.Last().Id + 1) : 0,
                         OriginalGpxFile = gpxFile,
                         FileName = System.IO.Path.GetFileNameWithoutExtension(fileentry.Name)
                     });
+                    Log.Debug(("Done"));
                 }
                 else
                 {
