@@ -1,0 +1,15 @@
+@inherits LayoutComponentBase
+
+<MudThemeProvider />
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudText Typo="Typo.h5" Class="ml-3">GPXRide</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Link="" />
+    </MudAppBar>
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+<MudSnackbarProvider/>
