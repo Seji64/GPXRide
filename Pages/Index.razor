@@ -45,7 +45,7 @@
                         </MudGrid>
                         <MudDivider DividerType="DividerType.Middle" Class="my-4"/>
 
-                        @if (GetSourceTypeCount(m_gpxFile) >= 2)
+                        @if (GetSourceTypes(m_gpxFile).Count >= 2)
                         {
                             <MudText class="mb-2" Typo="Typo.body1">Select Source Type</MudText>
                             <MudChipSet @bind-SelectedChip="m_task.SelectedSourceChip" Filter="true" Mandatory="true">
@@ -104,12 +104,13 @@
     [Inject] IBlazorDownloadFileService BlazorDownloadFileService { get; set; }
     readonly List<ConvertTask> ConvertTasks = new();
     protected override void OnInitialized()
-    { 
+    {
         Snackbar.Clear();
         Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
     }
     private async Task ConvertToItinerary(ConvertTask convertTask)
     {
+
         convertTask.State = ConvertState.Working;
         convertTask.ConvertedItineraryFile = await Task.Run(() =>
         {
@@ -124,7 +125,7 @@
                         Length = 1,
                         Duration = 1,
                         Name = convertTask.ConvertOptions.RouteName,
-                        
+
                         Preferences =
                         {
                             DirtRoads = convertTask.ConvertOptions.DirtyRoads,
@@ -136,7 +137,7 @@
                         }
                     }
                 };
-                SourceType type = (SourceType)Enum.Parse(typeof(SourceType), convertTask.SelectedSourceChip.Text);
+                SourceType type = convertTask.SelectedSourceChip is null ? (SourceType)Enum.Parse(typeof(SourceType), GetSourceTypes(convertTask.OriginalGpxFile).FirstOrDefault()) : (SourceType)Enum.Parse(typeof(SourceType), convertTask.SelectedSourceChip.Text);
                 Log.Debug($"Selected Route Type:{type.ToString()}");
                 GpxWaypoint[] waypoints = type switch
                 {
@@ -144,13 +145,13 @@
                     SourceType.Track => convertTask.OriginalGpxFile.trk.FirstOrDefault().trkseg.FirstOrDefault().trkpt,
                     SourceType.Waypoints => convertTask.OriginalGpxFile.wpt,
                     _ => throw new ArgumentOutOfRangeException()
-                    };
+                };
 
                 if (waypoints is null || !waypoints.Any())
                 {
                     throw new Exception(("failed to get any Waypoints"));
                 }
-                
+
                 foreach (var point in waypoints)
                 {
                     Log.Debug($"Waypoint: Latitude: {point.lat} , Longitude: {point.lon}");
@@ -184,14 +185,14 @@
     {
         bool errorOnUpload = false;
         var entries = e.GetMultipleFiles();
-        
+
         foreach (var fileentry in entries)
         {
             try
             {
                 Log.Debug("Deserialize GPX File...");
                 var gpxFile = await Gpx11SerializerAsync.DeserializeAsync(fileentry.OpenReadStream());
-                
+
                 if (gpxFile != null)
                 {
                     Log.Debug(("Done"));
@@ -235,23 +236,24 @@
 
     }
 
-    private int GetSourceTypeCount(GpxFile gpxFile)
+    private List<string> GetSourceTypes(GpxFile gpxFile)
     {
-        int count = 0;
+        List<string> routeTypes = new();
+
         if (gpxFile.wpt != null && gpxFile.wpt.Any())
         {
-            count++;
+            routeTypes.Add(SourceType.Waypoints.ToString());
         }
         if (gpxFile.rte != null && gpxFile.rte.Any())
         {
-            count++;
+            routeTypes.Add(SourceType.Route.ToString());
         }
         if (gpxFile.trk != null && gpxFile.trk.Any())
         {
-            count++;
+            routeTypes.Add(SourceType.Track.ToString());
         }
 
-        return count;
+        return routeTypes;
     }
 
 }
