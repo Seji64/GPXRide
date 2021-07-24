@@ -7,7 +7,6 @@ using Geo.Gps.Serialization.Xml.Gpx.Gpx11;
 namespace GPXRide.Classes
 {
     public class Gpx11SerializerAsync : Gpx11Serializer {
-
         public static async Task<GpxFile> DeserializeAsync(Stream stream)
         {
             using var streamReader = new StreamReader(stream);
@@ -18,6 +17,5 @@ namespace GPXRide.Classes
             var gpxFile = (GpxFile)xmlSerializer.Deserialize(stringReader);
             return gpxFile;
         }
-
     }
 }
