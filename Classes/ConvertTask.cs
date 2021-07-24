@@ -13,6 +13,5 @@ namespace GPXRide.Classes
         public ConvertOptions ConvertOptions {get; set; } = new();
         public MudChip SelectedSourceChip { get; set; }
         public SourceType SourceType { get; set; }
-        
     }
 }
