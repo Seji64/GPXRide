@@ -43,6 +43,17 @@
                                 <MudCheckBox @bind-Checked="m_task.ConvertOptions.Ferry" Label="Ferry" Dense="true"></MudCheckBox>
                             </MudItem>
                         </MudGrid>
+                        
+                        <MudDivider DividerType="DividerType.Middle" Class="my-4"/>
+                        <MudText class="mb-2" Typo="Typo.body1">Convert Options</MudText>
+                        <MudGrid>
+                            <MudItem xs="12">
+                                <MudCheckBox @bind-Checked="m_task.ConvertOptions.FirstWaypointAsMyPosition" Label="Use first Waypoint as 'MyPosition'" Dense="true"></MudCheckBox>
+                            </MudItem>
+                        </MudGrid>
+                        
+                        
+                        
                         <MudDivider DividerType="DividerType.Middle" Class="my-4"/>
 
                         @if (GetSourceTypes(m_gpxFile).Count >= 2)
@@ -164,6 +175,12 @@
                         City = point.name
 
                     };
+
+                    if (convertTask.ConvertOptions.FirstWaypointAsMyPosition && !m_ItineraryFile.Itinerary.Stops.Any())
+                    {
+                        stop.IsMyPosition = true;
+                    }
+                    
                     m_ItineraryFile.Itinerary.Stops.Add(stop);
                 }
 

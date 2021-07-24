@@ -9,5 +9,7 @@ namespace GPXRide.Classes
         public bool Trains {get; set;} = true;
         public bool Ferry {get; set;} = true;
         public string RouteName {get; set;}
+        
+        public bool FirstWaypointAsMyPosition { get; set; } = false;
     }
 }
