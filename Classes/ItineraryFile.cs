@@ -10,7 +10,6 @@ namespace GPXRide.Classes
         public Itinerary Itinerary { get; set; } = new();
         public MemoryStream ToZipArchiveStream()
         {
-        
             MemoryStream memoryStream = new MemoryStream();
 
             using var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true);

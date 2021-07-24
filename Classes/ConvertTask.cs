@@ -5,7 +5,6 @@ using MudBlazor;
 namespace GPXRide.Classes
 {
     public class ConvertTask{
-    
         public int? Id {get; set; } = null;
         public GpxFile OriginalGpxFile {get; set; } = null;
         public string FileName {get; set; }
