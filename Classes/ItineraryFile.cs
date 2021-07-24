@@ -6,9 +6,8 @@ using Newtonsoft.Json.Converters;
 namespace GPXRide.Classes
 {
     public class ItineraryFile
-    {
+    { 
         public Itinerary Itinerary { get; set; } = new();
-
         public MemoryStream ToZipArchiveStream()
         {
         
