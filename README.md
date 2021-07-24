@@ -1,5 +1,5 @@
 [![Deploy to GitHub Pages](https://github.com/Seji64/GPXRide/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/Seji64/GPXRide/actions/workflows/main.yml)
-![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/Seji64/GPXRide/main?style=plastic)
+![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/Seji64/GPXRide/main)
 
 # GPXRide
 
