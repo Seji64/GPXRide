@@ -28,6 +28,9 @@
                         <CardHeaderContent>
                             <MudText Typo="Typo.h5">@m_gpxFile.metadata.name</MudText>
                         </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Default" OnClick="@(() => DisposeConvertTask(m_task))" />
+                        </CardHeaderActions>
                     </MudCardHeader>
                     <MudCardContent>
                         <MudText Typo="Typo.body1" GutterBottom="true">Route Preferences</MudText>
@@ -62,7 +65,7 @@
                             <MudChipSet @bind-SelectedChip="m_task.SelectedSourceChip" Filter="true" Mandatory="true">
                                 @if (m_gpxFile.wpt != null && m_gpxFile.wpt.Any())
                                 {
-                                    <MudChip Icon="@Icons.Material.Filled.LocationPin" Color="Color.Success" Text="Waypoints" Default="true">Waypoints</MudChip>
+                                    <MudChip Icon="@Icons.Material.Filled.LocationOn" Color="Color.Success" Text="Waypoints" Default="true">Waypoints</MudChip>
                                 }
                                 @if (m_gpxFile.trk != null && m_gpxFile.trk.Any())
                                 {
@@ -272,6 +275,11 @@
         }
 
         return routeTypes;
+    }
+
+    private void DisposeConvertTask(ConvertTask convertTask)
+    {
+        ConvertTasks.Remove(convertTask);
     }
 
 }
