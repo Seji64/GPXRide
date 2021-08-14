@@ -29,5 +29,8 @@ namespace GPXRide.Classes
 
         [JsonProperty("name")]
         public string Name {get; set; }
+        
+        [JsonProperty("vehicleClass")]
+        public string VehicleClass {get; set; }
     }
 }
