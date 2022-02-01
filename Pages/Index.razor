@@ -6,13 +6,25 @@
 @using Serilog
 @inject ISnackbar Snackbar
 
-<MudContainer Class="mt-16 justify-center">
-
-    <MudPaper Class="d-flex pa-4">
-        <InputFile id="fileInput112" OnChange="UploadFiles" hidden multiple accept=".gpx" />
-        <MudButton HtmlTag="label" Variant="Variant.Filled" FullWidth="true" Color="Color.Primary"
-            StartIcon="@Icons.Filled.CloudUpload" for="fileInput112">Upload your GPX Files</MudButton>
-    </MudPaper>
+<MudContainer Class="mt-8 justify-center">
+        <MudPaper Class="d-flex pa-4 justify-center" Elevation="0">      
+            <label  style="
+                box-shadow: 0 2px 7px #4caf50;
+                display: inline-flex;
+                width: 200px;
+                justify-content: space-around;
+                border-radius: 2em;
+                color: white;
+                border:2px solid;
+                cursor: pointer;
+                align-items: center;
+                padding:16px;
+                background-color: #4caf50;"         
+               for="fileInput">
+                Upload GPX Files <MudIcon Icon="@Icons.Filled.CloudUpload"/>
+            </label>
+            <InputFile id="fileInput" OnChange="UploadFiles" hidden multiple accept=".gpx" />
+        </MudPaper>
 </MudContainer>
 
 <MudContainer Class="mt-8 justify-center">
@@ -23,87 +35,108 @@
             var m_gpxFile = m_task.OriginalGpxFile;
             m_task.ConvertOptions.RouteName = string.IsNullOrWhiteSpace(m_task.ConvertOptions.RouteName) ? m_task.FileName : m_task.ConvertOptions.RouteName;
             <MudItem xs="16" sm="4">
-                <MudCard>
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <MudText Typo="Typo.h5">@m_gpxFile.metadata.name</MudText>
-                        </CardHeaderContent>
-                        <CardHeaderActions>
-                            <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Default" OnClick="@(() => DisposeConvertTask(m_task))" />
-                        </CardHeaderActions>
-                    </MudCardHeader>
-                    <MudCardContent>
-                        <MudText Typo="Typo.body1" GutterBottom="true">Route Preferences</MudText>
-                        <MudGrid>
-                            <MudItem xs="6">
-                                <MudCheckBox @bind-Checked="m_task.ConvertOptions.Motorway" Label="Motorway" Dense="true"></MudCheckBox>
-                                <MudCheckBox @bind-Checked="m_task.ConvertOptions.TollFree" Label="Toll Free" Dense="true"></MudCheckBox>
-                                <MudCheckBox @bind-Checked="m_task.ConvertOptions.DirtyRoads" Label="Dirty Roads" Dense="true"></MudCheckBox>
-                            </MudItem>
-                            <MudItem xs="3">
-                                <MudCheckBox @bind-Checked="m_task.ConvertOptions.Tunnel" Label="Tunnel" Dense="true"></MudCheckBox>
-                                <MudCheckBox @bind-Checked="m_task.ConvertOptions.Trains" Label="Trains" Dense="true"></MudCheckBox>
-                                <MudCheckBox @bind-Checked="m_task.ConvertOptions.Ferry" Label="Ferry" Dense="true"></MudCheckBox>
-                            </MudItem>
-                        </MudGrid>
-                        
-                        <MudDivider DividerType="DividerType.Middle" Class="my-4"/>
-                        <MudText class="mb-2" Typo="Typo.body1">Convert Options</MudText>
-                        <MudGrid>
-                            <MudItem xs="12">
-                                <MudCheckBox @bind-Checked="m_task.ConvertOptions.FirstWaypointAsMyPosition" Label="Use first Waypoint as 'MyPosition'" Dense="true"></MudCheckBox>
-                            </MudItem>
-                        </MudGrid>
-                        
-                        
-                        
-                        <MudDivider DividerType="DividerType.Middle" Class="my-4"/>
+                <MudCard Style="position:relative;">
 
-                        @if (GetSourceTypes(m_gpxFile).Count >= 2)
-                        {
-                            <MudText class="mb-2" Typo="Typo.body1">Select Source Type</MudText>
-                            <MudChipSet @bind-SelectedChip="m_task.SelectedSourceChip" Filter="true" Mandatory="true">
-                                @if (m_gpxFile.wpt != null && m_gpxFile.wpt.Any())
-                                {
-                                    <MudChip Icon="@Icons.Material.Filled.LocationOn" Color="Color.Success" Text="Waypoints" Default="true">Waypoints</MudChip>
-                                }
-                                @if (m_gpxFile.trk != null && m_gpxFile.trk.Any())
-                                {
-                                    <MudChip Icon="@Icons.Material.Filled.LinearScale" Color="Color.Secondary" Text="Track" Default="true">Track</MudChip>
-                                }
-                                @if (m_gpxFile.rte != null && m_gpxFile.rte.Any())
-                                {
-                                    <MudChip Icon="@Icons.Material.Filled.AltRoute" Color="Color.Info" Text="Route" Default="true">Route</MudChip>
-                                }
-                            </MudChipSet>
-
+                    @if (m_gpxFile is null)
+                    {
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudSkeleton Width="300px" />
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="250px" />
+                        <MudCardContent>
+                            <MudSkeleton Animation="Animation.Wave" />
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Height="30px" Width="30px" Class="ml-2 mb-2" />
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Height="30px" Width="30px" Class="ml-3 mb-2" />
+                        </MudCardActions>
+                        <MudOverlay Visible="@(m_gpxFile is null)" DarkBackground="true" Absolute="true">
+                            <MudProgressCircular Color="Color.Secondary" Indeterminate="true" />
+                        </MudOverlay>
+                    }
+                    else
+                    {
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h5">@m_gpxFile.metadata.name</MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Default" OnClick="@(() => DisposeConvertTask(m_task))" />
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudText Typo="Typo.body1" GutterBottom="true">Route Preferences</MudText>
+                            <MudGrid>
+                                <MudItem xs="6">
+                                    <MudCheckBox @bind-Checked="m_task.ConvertOptions.Motorway" Label="Motorway" Dense="true"></MudCheckBox>
+                                    <MudCheckBox @bind-Checked="m_task.ConvertOptions.TollFree" Label="Toll Free" Dense="true"></MudCheckBox>
+                                    <MudCheckBox @bind-Checked="m_task.ConvertOptions.DirtyRoads" Label="Dirty Roads" Dense="true"></MudCheckBox>
+                                </MudItem>
+                                <MudItem xs="3">
+                                    <MudCheckBox @bind-Checked="m_task.ConvertOptions.Tunnel" Label="Tunnel" Dense="true"></MudCheckBox>
+                                    <MudCheckBox @bind-Checked="m_task.ConvertOptions.Trains" Label="Trains" Dense="true"></MudCheckBox>
+                                    <MudCheckBox @bind-Checked="m_task.ConvertOptions.Ferry" Label="Ferry" Dense="true"></MudCheckBox>
+                                </MudItem>
+                            </MudGrid>
+                        
                             <MudDivider DividerType="DividerType.Middle" Class="my-4"/>
-                        }
-                        <MudTextField @bind-Value="m_task.ConvertOptions.RouteName" Label="Route Name" Variant="Variant.Outlined" Margin="Margin.Dense"></MudTextField>
-                    </MudCardContent>
-                    <MudCardActions>
+                            <MudText class="mb-2" Typo="Typo.body1">Convert Options</MudText>
+                            <MudGrid>
+                                <MudItem xs="12">
+                                    <MudCheckBox @bind-Checked="m_task.ConvertOptions.FirstWaypointAsMyPosition" Label="Use first Waypoint as 'MyPosition'" Dense="true"></MudCheckBox>
+                                </MudItem>
+                            </MudGrid>
+                                                                 
+                            <MudDivider DividerType="DividerType.Middle" Class="my-4"/>
 
-                        @switch (m_task.State)
-                        {
-                            case ConvertState.Working:
-                                <MudChip Class="mr-2" Icon="@Icons.Material.Filled.HourglassBottom" Color="Color.Info">Converting...</MudChip>
-                                <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true" />
-                                break;
-                            case ConvertState.Completed:
-                                <MudChip Icon="@Icons.Material.Filled.Check" Color="Color.Success">Conversion successfull</MudChip>
-                                <MudIconButton @onclick=@(async () => await BlazorDownloadFileService.DownloadFile($"{m_task.ConvertOptions.RouteName}.mvitinerary",m_task.ConvertedItineraryFile.ToZipArchiveStream(),"application/octet-stream")) Icon="@Icons.Material.Filled.FileDownload" Color="Color.Primary" aria-label="Download" />
-                                <MudIconButton @onclick="() => ConvertToItinerary(m_task)" Icon="@Icons.Material.Filled.Refresh" aria-label="Convert again" Color="Color.Info" />
-                                break;
-                            case ConvertState.Error:
-                                <MudChip Icon="@Icons.Material.Filled.Warning" Color="Color.Error">Conversion failed</MudChip>
-                                <MudIconButton @onclick="() => ConvertToItinerary(m_task)" Icon="@Icons.Material.Filled.Refresh" aria-label="Retry" Color="Color.Info" />
-                                break;
-                            default:
-                                <MudButton @onclick="() => ConvertToItinerary(m_task)" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.Send">Convert to Itinerary</MudButton>
-                                break;
-                        }
+                            @if (GetSourceTypes(m_gpxFile).Count >= 2)
+                            {
+                                <MudText class="mb-2" Typo="Typo.body1">Select Source Type</MudText>
+                                <MudChipSet @bind-SelectedChip="m_task.SelectedSourceChip" Filter="true" Mandatory="true">
+                                    @if (m_gpxFile.wpt != null && m_gpxFile.wpt.Any())
+                                    {
+                                        <MudChip Icon="@Icons.Material.Filled.LocationOn" Color="Color.Success" Text="Waypoints" Default="true">Waypoints</MudChip>
+                                    }
+                                    @if (m_gpxFile.trk != null && m_gpxFile.trk.Any())
+                                    {
+                                        <MudChip Icon="@Icons.Material.Filled.LinearScale" Color="Color.Secondary" Text="Track" Default="true">Track</MudChip>
+                                    }
+                                    @if (m_gpxFile.rte != null && m_gpxFile.rte.Any())
+                                    {
+                                        <MudChip Icon="@Icons.Material.Filled.AltRoute" Color="Color.Info" Text="Route" Default="true">Route</MudChip>
+                                    }
+                                </MudChipSet>
 
-                    </MudCardActions>
+                                <MudDivider DividerType="DividerType.Middle" Class="my-4"/>
+                            }
+                            <MudTextField @bind-Value="m_task.ConvertOptions.RouteName" Label="Route Name" Variant="Variant.Outlined" Margin="Margin.Dense"></MudTextField>
+                        </MudCardContent>
+                        <MudCardActions>
+
+                            @switch (m_task.State)
+                            {
+                                case ConvertState.Working:
+                                    <MudChip Class="mr-2" Icon="@Icons.Material.Filled.HourglassBottom" Color="Color.Info">Converting...</MudChip>
+                                    <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true" />
+                                    break;
+                                case ConvertState.Completed:
+                                    <MudChip Icon="@Icons.Material.Filled.Check" Color="Color.Success">Conversion successfull</MudChip>
+                                    <MudIconButton @onclick=@(async () => await BlazorDownloadFileService.DownloadFile($"{m_task.ConvertOptions.RouteName}.mvitinerary",m_task.ConvertedItineraryFile.ToZipArchiveStream(),"application/octet-stream")) Icon="@Icons.Material.Filled.FileDownload" Color="Color.Primary" aria-label="Download" />
+                                    <MudIconButton @onclick="() => ConvertToItinerary(m_task)" Icon="@Icons.Material.Filled.Refresh" aria-label="Convert again" Color="Color.Info" />
+                                    break;
+                                case ConvertState.Error:
+                                    <MudChip Icon="@Icons.Material.Filled.Warning" Color="Color.Error">Conversion failed</MudChip>
+                                    <MudIconButton @onclick="() => ConvertToItinerary(m_task)" Icon="@Icons.Material.Filled.Refresh" aria-label="Retry" Color="Color.Info" />
+                                    break;
+                                default:
+                                    <MudButton @onclick="() => ConvertToItinerary(m_task)" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.Send">Convert to Itinerary</MudButton>
+                                    break;
+                            }
+
+                        </MudCardActions>          
+                    }
                 </MudCard>
             </MudItem>
         }
@@ -184,7 +217,7 @@
                     {
                         stop.IsMyPosition = true;
                     }
-                    
+
                     m_ItineraryFile.Itinerary.Stops.Add(stop);
                 }
 
@@ -202,28 +235,41 @@
         convertTask.State = convertTask.ConvertedItineraryFile != null ? ConvertState.Completed : ConvertState.Error;
     }
 
-    private async Task UploadFiles(InputFileChangeEventArgs e)
+    private void UploadFiles(InputFileChangeEventArgs e)
     {
+        long MAXALLOWEDSIZE = 2097152;
         bool errorOnUpload = false;
         var entries = e.GetMultipleFiles();
+        object _lock = new Object();
 
-        foreach (var fileentry in entries)
+        entries.AsParallel().AsOrdered().ForAll(async fileentry =>
         {
+            int? _Id = 0;
+
+            lock(_lock)
+            {
+                _Id = ConvertTasks.Any() ? (ConvertTasks.Last().Id + 1) : 0;
+                ConvertTasks.Add(new ConvertTask()
+                {
+                    Id = _Id,
+                    OriginalGpxFile = null,
+                    FileName = System.IO.Path.GetFileNameWithoutExtension(fileentry.Name)
+                });
+            }
+
+            StateHasChanged();
+
             try
             {
                 Log.Debug("Deserialize GPX File...");
-                var gpxFile = await Gpx11SerializerAsync.DeserializeAsync(fileentry.OpenReadStream());
+                var gpxFile = await Gpx11SerializerAsync.DeserializeAsync(fileentry.OpenReadStream(MAXALLOWEDSIZE));
 
                 if (gpxFile != null)
                 {
-                    Log.Debug(("Done"));
-                    Log.Debug("Creating and adding new ConvertTask..");
-                    ConvertTasks.Add(new ConvertTask()
-                    {
-                        Id = ConvertTasks.Any() ? (ConvertTasks.Last().Id + 1) : 0,
-                        OriginalGpxFile = gpxFile,
-                        FileName = System.IO.Path.GetFileNameWithoutExtension(fileentry.Name)
-                    });
+                    Log.Debug("GPX File deserialized!");
+                    Log.Debug($"Attaching GpxFile to ConvertTask with Id {_Id}");
+
+                    ConvertTasks.Single(x => x.Id == _Id).OriginalGpxFile = gpxFile;
                     Log.Debug(("Done"));
                 }
                 else
@@ -235,9 +281,14 @@
             {
                 Log.Error(ex.Message);
                 errorOnUpload = true;
+                Log.Debug($"Removing Convert Task with Id {_Id}");
+                ConvertTasks.RemoveAll(x => x.Id == _Id);
             }
-
-        }
+            finally
+            {
+                StateHasChanged();
+            }
+        });
 
         if (!errorOnUpload)
         {
@@ -254,7 +305,6 @@
                 Snackbar.Add("Failed to upload files", Severity.Warning);
             }
         }
-
     }
 
     private List<string> GetSourceTypes(GpxFile gpxFile)
