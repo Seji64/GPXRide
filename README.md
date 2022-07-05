@@ -10,7 +10,9 @@ GPXRide is powered by Blazor Webassembly and runs just in your Browser - no sepe
 
 Since the MV Agusta MV Ride App does not allow advanced route planning like kurviger.de I wrote this little tool which allows you to create a tour on your PC with any route planner and convert it from GPX to a MV Ride compatible format (mviniternary).
 
-# Screenshot
+# Screenshots
+
+![alt text](https://github.com/Seji64/GPXRide/raw/main/deviceScreenShot.png)
 
 ![alt text](https://github.com/Seji64/GPXRide/raw/main/Screenshot.png)
 
