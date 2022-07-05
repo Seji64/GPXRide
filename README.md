@@ -18,4 +18,4 @@ Since the MV Agusta MV Ride App does not allow advanced route planning like kurv
 
 # How To Use
 
-![alt text](https://github.com/Seji64/GPXRide/raw/main/Animation.gif)
+<img src=https://github.com/Seji64/GPXRide/raw/main/Animation.gif width="400" height="790">
