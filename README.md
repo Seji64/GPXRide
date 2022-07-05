@@ -17,4 +17,5 @@ Since the MV Agusta MV Ride App does not allow advanced route planning like kurv
 ![alt text](https://github.com/Seji64/GPXRide/raw/main/Screenshot.png)
 
 # How To Use
-//ToDo: Provide Screenshots / GIF to show to Convert and import a route
+
+![alt text](https://github.com/Seji64/GPXRide/raw/main/Animation.gif)
