@@ -5,6 +5,7 @@
 @using GPXRide.Enums
 @using Serilog
 @inject ISnackbar Snackbar
+@inject IJSRuntime JS
 
 <MudContainer Class="mt-8 justify-center">
         <MudPaper Class="d-flex pa-4 justify-center" Elevation="0">      
@@ -124,7 +125,10 @@
                                 case ConvertState.Completed:
                                     <MudChip Icon="@Icons.Material.Filled.Check" Color="Color.Success">Conversion successfull</MudChip>
                                     <MudIconButton @onclick=@(async () => await BlazorDownloadFileService.DownloadFile($"{m_task.ConvertOptions.RouteName}.mvitinerary",m_task.ConvertedItineraryFile.ToZipArchiveStream(),"application/octet-stream")) Icon="@Icons.Material.Filled.FileDownload" Color="Color.Primary" aria-label="Download" />
-                                    <MudIconButton @onclick="() => ConvertToItinerary(m_task)" Icon="@Icons.Material.Filled.Refresh" aria-label="Convert again" Color="Color.Info" />
+                                    @if (_webShareSupported)
+                                    {
+                                        <MudIconButton @onclick="() => ShareItineraryFile(m_task)" Icon="@Icons.Material.Filled.Share" aria-label="Share" Color="Color.Info" />
+                                    }
                                     break;
                                 case ConvertState.Error:
                                     <MudChip Icon="@Icons.Material.Filled.Warning" Color="Color.Error">Conversion failed</MudChip>
@@ -150,10 +154,14 @@
 
     [Inject] IBlazorDownloadFileService BlazorDownloadFileService { get; set; }
     readonly List<ConvertTask> ConvertTasks = new();
-    protected override void OnInitialized()
+    private bool _webShareSupported = false;
+
+    protected override async Task OnInitializedAsync()
     {
         Snackbar.Clear();
         Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+        _webShareSupported = await IsWebShareSupportedAsync();
+        await base.OnInitializedAsync();
     }
     private async Task ConvertToItinerary(ConvertTask convertTask)
     {
@@ -231,7 +239,7 @@
             }
         });
 
-        await Task.Delay(1000);
+        await Task.Delay(500);
         convertTask.State = convertTask.ConvertedItineraryFile != null ? ConvertState.Completed : ConvertState.Error;
     }
 
@@ -332,4 +340,30 @@
         ConvertTasks.Remove(convertTask);
     }
 
-}
+    private async Task<bool> IsWebShareSupportedAsync()
+    {
+        return (await JS.InvokeAsync<bool>("IsShareSupported"));
+    }
+
+    private async Task ShareItineraryFile(ConvertTask task)
+    {
+        string payload = Convert.ToBase64String(task.ConvertedItineraryFile.ToZipArchiveStream().ToArray());
+
+        if (await JS.InvokeAsync<bool>("CanShareThisFile", $"{task.ConvertOptions.RouteName}.mvitinerary", "application/octet-stream", $"data:text/plain;base64,{payload}"))
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("ShareFile","Share Itinerary File", task.ConvertOptions.RouteName, $"{task.ConvertOptions.RouteName}.mvitinerary", "application/octet-stream", $"data:text/plain;base64,{payload}");
+            }
+            catch (JSException)
+            {
+                Snackbar.Add("Sorry! - Your Browser does not support sharing of this type of file!",Severity.Error);
+            }
+        }
+        else
+        {
+            Snackbar.Add("Sorry! - Your Browser does not support sharing of this type of file!",Severity.Error);
+        }       
+    }
+
+ }
