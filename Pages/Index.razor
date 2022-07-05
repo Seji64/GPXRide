@@ -355,9 +355,12 @@
             {
                 await JS.InvokeVoidAsync("ShareFile","Share Itinerary File", task.ConvertOptions.RouteName, $"{task.ConvertOptions.RouteName}.mvitinerary", "application/octet-stream", $"data:text/plain;base64,{payload}");
             }
-            catch (JSException)
+            catch (JSException ex)
             {
-                Snackbar.Add("Sorry! - Your Browser does not support sharing of this type of file!",Severity.Error);
+                if (ex.Message != null && ex.Message.Contains("Permission denied"))
+                {
+                    Snackbar.Add("Sorry! - Your Browser does not support sharing of this type of file!",Severity.Error);    
+                }
             }
         }
         else
