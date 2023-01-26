@@ -13,7 +13,7 @@
 
     <MudFab HtmlTag="label" Class="d-flex pa-4 justify-center"
         Color="Color.Secondary"
-        Icon="@Icons.Filled.CloudUpload"
+        Icon="@Icons.Material.Filled.CloudUpload"
         Label="Upload & Convert GPX Files"
         for="fileInput" />
 
@@ -181,7 +181,7 @@
                     }
                 };
                 SourceType type = convertTask.SelectedSourceChip is null ? (SourceType)Enum.Parse(typeof(SourceType), GetSourceTypes(convertTask.OriginalGpxFile).FirstOrDefault()) : (SourceType)Enum.Parse(typeof(SourceType), convertTask.SelectedSourceChip.Text);
-                Log.Debug($"Selected Route Type:{type.ToString()}");
+                Log.Debug("Selected Route Type:{Type}", type.ToString());
                 GpxWaypoint[] waypoints = type switch
                 {
                     SourceType.Route => convertTask.OriginalGpxFile.rte.FirstOrDefault().rtept,
@@ -197,7 +197,7 @@
 
                 foreach (var point in waypoints)
                 {
-                    Log.Debug($"Waypoint: Latitude: {point.lat} , Longitude: {point.lon}");
+                    Log.Debug("Waypoint: Latitude: {Lat} , Longitude: {Lon}", point.lat, point.lon);
 
                     var stop = new Stop()
                     {
@@ -221,7 +221,7 @@
             }
             catch (Exception ex)
             {
-                Log.Error(ex.Message);
+                Log.Error("{ErrorMessage}", ex.Message);
                 return null;
             }
         });
@@ -262,7 +262,7 @@
                 if (gpxFile != null)
                 {
                     Log.Debug("GPX File deserialized!");
-                    Log.Debug($"Attaching GpxFile to ConvertTask with Id {_Id}");
+                    Log.Debug("Attaching GpxFile to ConvertTask with Id {Id}", _Id);
 
                     ConvertTasks.Single(x => x.Id == _Id).OriginalGpxFile = gpxFile;
                     Log.Debug(("Done"));
@@ -274,9 +274,9 @@
             }
             catch (Exception ex)
             {
-                Log.Error(ex.Message);
+                Log.Error("{ErrorMessage}", ex.Message);
                 errorOnUpload = true;
-                Log.Debug($"Removing Convert Task with Id {_Id}");
+                Log.Debug("Removing Convert Task with Id {Id}", _Id);
                 ConvertTasks.RemoveAll(x => x.Id == _Id);
             }
             finally

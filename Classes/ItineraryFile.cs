@@ -10,14 +10,14 @@ namespace GPXRide.Classes
         public Itinerary Itinerary { get; set; } = new();
         public MemoryStream ToZipArchiveStream()
         {
-            MemoryStream memoryStream = new MemoryStream();
+            MemoryStream memoryStream = new();
 
             using var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true);
             var demoFile = archive.CreateEntry("itinerary.json");
             
             using var entryStream = demoFile.Open();
             var ItineraryText = JsonConvert.SerializeObject(Itinerary, new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-ddTHH:mm:ssZ" });
-            MemoryStream stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(ItineraryText));
+            MemoryStream stream = new(System.Text.Encoding.UTF8.GetBytes(ItineraryText));
             stream.WriteTo(entryStream);
 
             return memoryStream;
