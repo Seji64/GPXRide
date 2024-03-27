@@ -1,6 +1,7 @@
 namespace GPXRide.Enums
 {
-    public enum ConvertState{
+    public enum ConvertState
+    {
         Working,
         Completed,
         Error,

@@ -11,14 +11,13 @@ using System;
 using Serilog;
 using Geo.Gps.Serialization.Xml.Gpx.Gpx11;
 using System.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace GPXRide.Pages
 {
     public partial class Index
     {
         [Inject] IBlazorDownloadFileService BlazorDownloadFileService { get; set; }
-        readonly List<ConvertTask> ConvertTasks = new();
+        readonly List<ConvertTask> ConvertTasks = [];
         private bool _webShareSupported = false;
 
         protected override async Task OnInitializedAsync()
@@ -28,7 +27,7 @@ namespace GPXRide.Pages
             _webShareSupported = await IsWebShareSupportedAsync();
             await base.OnInitializedAsync();
         }
-        private async Task ConvertToItinerary(ConvertTask convertTask)
+        private static async Task ConvertToItinerary(ConvertTask convertTask)
         {
 
             convertTask.State = ConvertState.Working;
@@ -68,9 +67,9 @@ namespace GPXRide.Pages
                         _ => throw new InvalidOperationException()
                     };
 
-                    if (waypoints is null || !waypoints.Any())
+                    if (waypoints is null || waypoints.Length == 0)
                     {
-                        throw new ArgumentNullException("failed to get any Waypoints");
+                        throw new InvalidOperationException("failed to get any Waypoints");
                     }
 
                     foreach (var point in waypoints)
@@ -86,7 +85,7 @@ namespace GPXRide.Pages
 
                         };
 
-                        if (convertTask.ConvertOptions.FirstWaypointAsMyPosition && !m_ItineraryFile.Itinerary.Stops.Any())
+                        if (convertTask.ConvertOptions.FirstWaypointAsMyPosition && m_ItineraryFile.Itinerary.Stops.Count == 0)
                         {
                             stop.IsMyPosition = true;
                         }
@@ -120,7 +119,7 @@ namespace GPXRide.Pages
 
                 lock (_lock)
                 {
-                    _Id = ConvertTasks.Any() ? (ConvertTasks[^1].Id + 1) : 0;
+                    _Id = ConvertTasks.Count != 0 ? (ConvertTasks[^1].Id + 1) : 0;
                     ConvertTasks.Add(new ConvertTask()
                     {
                         Id = _Id,
@@ -168,7 +167,7 @@ namespace GPXRide.Pages
             }
             else
             {
-                if (ConvertTasks.Any())
+                if (ConvertTasks.Count != 0)
                 {
                     Snackbar.Add("Some files failed to upload", Severity.Warning);
                 }
@@ -179,19 +178,19 @@ namespace GPXRide.Pages
             }
         }
 
-        private List<string> GetSourceTypes(GpxFile gpxFile)
+        private static List<string> GetSourceTypes(GpxFile gpxFile)
         {
-            List<string> routeTypes = new();
+            List<string> routeTypes = [];
 
-            if (gpxFile.wpt != null && gpxFile.wpt.Any())
+            if (gpxFile.wpt != null && gpxFile.wpt.Length != 0)
             {
                 routeTypes.Add(SourceType.Waypoints.ToString());
             }
-            if (gpxFile.rte != null && gpxFile.rte.Any())
+            if (gpxFile.rte != null && gpxFile.rte.Length != 0)
             {
                 routeTypes.Add(SourceType.Route.ToString());
             }
-            if (gpxFile.trk != null && gpxFile.trk.Any())
+            if (gpxFile.trk != null && gpxFile.trk.Length != 0)
             {
                 routeTypes.Add(SourceType.Track.ToString());
             }

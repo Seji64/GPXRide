@@ -3,10 +3,12 @@
 <MudThemeProvider />
 <MudLayout>
     <MudAppBar Elevation="1">
-        <MudAvatar Image="icon.png" Size="Size.Medium" Class="ma-2" />
+        <MudAvatar Size="Size.Medium" Class="ma-2">
+            <MudImage Src="icon.png" />
+        </MudAvatar>
         <MudText Typo="Typo.h5" Class="ml-3">GPXRide</MudText>
         <MudSpacer/>
-        <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Link="https://github.com/Seji64/GPXRide"/>
+        <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/Seji64/GPXRide"/>
     </MudAppBar>
     <MudMainContent>
         @Body

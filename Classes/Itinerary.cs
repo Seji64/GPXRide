@@ -7,30 +7,30 @@ namespace GPXRide.Classes
     public class Itinerary
     {
         [JsonProperty("length")]
-        public int Length {get; set; }
+        public int Length { get; set; }
 
         [JsonProperty("preferences")]
-        public Preferences Preferences {get; set; } = new();
+        public Preferences Preferences { get; set; } = new();
 
         [JsonProperty("id")]
-        public string Id {get; set; }
+        public string Id { get; set; }
 
         [JsonProperty("creationDate")]
-        public DateTime CreationDate {get; set; } = DateTime.Now;
+        public DateTime CreationDate { get; set; } = DateTime.Now;
 
         [JsonProperty("nations")]
-        public List<object> Nations {get; set; } = new();
+        public List<object> Nations { get; set; } = [];
 
         [JsonProperty("duration")]
-        public int Duration {get; set; }
+        public int Duration { get; set; }
 
         [JsonProperty("stops")]
-        public List<Stop> Stops {get; set; } = new();
+        public List<Stop> Stops { get; set; } = [];
 
         [JsonProperty("name")]
-        public string Name {get; set; }
-        
+        public string Name { get; set; }
+
         [JsonProperty("vehicleClass")]
-        public string VehicleClass {get; set; }
+        public string VehicleClass { get; set; }
     }
 }
