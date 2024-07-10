@@ -1,36 +1,36 @@
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace GPXRide.Classes
 {
     public class Itinerary
     {
-        [JsonProperty("length")]
+        [JsonPropertyName("length")]
         public int Length { get; set; }
 
-        [JsonProperty("preferences")]
+        [JsonPropertyName("preferences")]
         public Preferences Preferences { get; set; } = new();
 
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string Id { get; set; }
 
-        [JsonProperty("creationDate")]
+        [JsonPropertyName("creationDate")]
         public DateTime CreationDate { get; set; } = DateTime.Now;
 
-        [JsonProperty("nations")]
+        [JsonPropertyName("nations")]
         public List<object> Nations { get; set; } = [];
 
-        [JsonProperty("duration")]
+        [JsonPropertyName("duration")]
         public int Duration { get; set; }
 
-        [JsonProperty("stops")]
+        [JsonPropertyName("stops")]
         public List<Stop> Stops { get; set; } = [];
 
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonProperty("vehicleClass")]
+        [JsonPropertyName("vehicleClass")]
         public string VehicleClass { get; set; }
     }
 }

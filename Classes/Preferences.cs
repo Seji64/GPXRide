@@ -1,25 +1,25 @@
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace GPXRide.Classes
 {
     public class Preferences
     {
-        [JsonProperty("motorway")]
+        [JsonPropertyName("motorway")]
         public bool Motorway { get; set; }
 
-        [JsonProperty("tunnel")]
+        [JsonPropertyName("tunnel")]
         public bool Tunnel { get; set; }
 
-        [JsonProperty("dirtRoads")]
+        [JsonPropertyName("dirtRoads")]
         public bool DirtRoads { get; set; }
 
-        [JsonProperty("trains")]
+        [JsonPropertyName("trains")]
         public bool Trains { get; set; }
 
-        [JsonProperty("tollFree")]
+        [JsonPropertyName("tollFree")]
         public bool TollFree { get; set; }
 
-        [JsonProperty("ferry")]
+        [JsonPropertyName("ferry")]
         public bool Ferry { get; set; }
     }
 }

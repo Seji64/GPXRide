@@ -1,24 +1,25 @@
-﻿using BlazorDownloadFile;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using BlazorDownloadFile;
+using Geo.Gps.Serialization.Xml.Gpx.Gpx11;
 using GPXRide.Classes;
 using GPXRide.Enums;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using MudBlazor;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System;
 using Serilog;
-using Geo.Gps.Serialization.Xml.Gpx.Gpx11;
-using System.Linq;
 
 namespace GPXRide.Pages
 {
     public partial class Index
     {
         [Inject] IBlazorDownloadFileService BlazorDownloadFileService { get; set; }
-        readonly List<ConvertTask> ConvertTasks = [];
-        private bool _webShareSupported = false;
+        readonly List<ConvertTask> _convertTasks = [];
+        private bool _webShareSupported;
 
         protected override async Task OnInitializedAsync()
         {
@@ -36,7 +37,7 @@ namespace GPXRide.Pages
 
                 try
                 {
-                    ItineraryFile m_ItineraryFile = new()
+                    ItineraryFile mItineraryFile = new()
                     {
                         Itinerary =
                     {
@@ -57,7 +58,7 @@ namespace GPXRide.Pages
                         }
                     }
                     };
-                    SourceType type = convertTask.SelectedSourceChip is null ? (SourceType)Enum.Parse(typeof(SourceType), GetSourceTypes(convertTask.OriginalGpxFile).FirstOrDefault()) : (SourceType)Enum.Parse(typeof(SourceType), convertTask.SelectedSourceChip.Text);
+                    SourceType type = convertTask.SourceType;
                     Log.Debug("Selected Route Type:{Type}", type.ToString());
                     GpxWaypoint[] waypoints = type switch
                     {
@@ -72,11 +73,11 @@ namespace GPXRide.Pages
                         throw new InvalidOperationException("failed to get any Waypoints");
                     }
 
-                    foreach (var point in waypoints)
+                    foreach (GpxWaypoint point in waypoints)
                     {
                         Log.Debug("Waypoint: Latitude: {Lat} , Longitude: {Lon}", point.lat, point.lon);
 
-                        var stop = new Stop()
+                        Stop stop = new Stop
                         {
                             Latitude = point.lat,
                             Longitude = point.lon,
@@ -85,15 +86,15 @@ namespace GPXRide.Pages
 
                         };
 
-                        if (convertTask.ConvertOptions.FirstWaypointAsMyPosition && m_ItineraryFile.Itinerary.Stops.Count == 0)
+                        if (convertTask.ConvertOptions.FirstWaypointAsMyPosition && mItineraryFile.Itinerary.Stops.Count == 0)
                         {
                             stop.IsMyPosition = true;
                         }
 
-                        m_ItineraryFile.Itinerary.Stops.Add(stop);
+                        mItineraryFile.Itinerary.Stops.Add(stop);
                     }
 
-                    return m_ItineraryFile;
+                    return mItineraryFile;
 
                 }
                 catch (Exception ex)
@@ -109,22 +110,22 @@ namespace GPXRide.Pages
 
         private void UploadFiles(IReadOnlyList<IBrowserFile> files)
         {
-            long MAXALLOWEDSIZE = 2097152;
+            long maxallowedsize = 2097152;
             bool errorOnUpload = false;
-            object _lock = new();
+            object @lock = new();
 
             files.AsParallel().AsOrdered().ForAll(async fileentry =>
             {
-                int? _Id = 0;
+                int? id = 0;
 
-                lock (_lock)
+                lock (@lock)
                 {
-                    _Id = ConvertTasks.Count != 0 ? (ConvertTasks[^1].Id + 1) : 0;
-                    ConvertTasks.Add(new ConvertTask()
+                    id = _convertTasks.Count != 0 ? (_convertTasks[^1].Id + 1) : 0;
+                    _convertTasks.Add(new ConvertTask
                     {
-                        Id = _Id,
+                        Id = id,
                         OriginalGpxFile = null,
-                        FileName = System.IO.Path.GetFileNameWithoutExtension(fileentry.Name)
+                        FileName = Path.GetFileNameWithoutExtension(fileentry.Name)
                     });
                 }
 
@@ -133,14 +134,14 @@ namespace GPXRide.Pages
                 try
                 {
                     Log.Debug("Deserialize GPX File...");
-                    var gpxFile = await Gpx11SerializerAsync.DeserializeAsync(fileentry.OpenReadStream(MAXALLOWEDSIZE));
+                    GpxFile gpxFile = await Gpx11SerializerAsync.DeserializeAsync(fileentry.OpenReadStream(maxallowedsize));
 
                     if (gpxFile != null)
                     {
                         Log.Debug("GPX File deserialized!");
-                        Log.Debug("Attaching GpxFile to ConvertTask with Id {Id}", _Id);
+                        Log.Debug("Attaching GpxFile to ConvertTask with Id {Id}", id);
 
-                        ConvertTasks.Single(x => x.Id == _Id).OriginalGpxFile = gpxFile;
+                        _convertTasks.Single(x => x.Id == id).OriginalGpxFile = gpxFile;
                         Log.Debug(("Done"));
                     }
                     else
@@ -152,8 +153,8 @@ namespace GPXRide.Pages
                 {
                     Log.Error("{ErrorMessage}", ex.Message);
                     errorOnUpload = true;
-                    Log.Debug("Removing Convert Task with Id {Id}", _Id);
-                    ConvertTasks.RemoveAll(x => x.Id == _Id);
+                    Log.Debug("Removing Convert Task with Id {Id}", id);
+                    _convertTasks.RemoveAll(x => x.Id == id);
                 }
                 finally
                 {
@@ -167,14 +168,8 @@ namespace GPXRide.Pages
             }
             else
             {
-                if (ConvertTasks.Count != 0)
-                {
-                    Snackbar.Add("Some files failed to upload", Severity.Warning);
-                }
-                else
-                {
-                    Snackbar.Add("Failed to upload files", Severity.Warning);
-                }
+                Snackbar.Add(_convertTasks.Count != 0 ? "Some files failed to upload" : "Failed to upload files",
+                    Severity.Warning);
             }
         }
 
@@ -200,27 +195,27 @@ namespace GPXRide.Pages
 
         private void DisposeConvertTask(ConvertTask convertTask)
         {
-            ConvertTasks.Remove(convertTask);
+            _convertTasks.Remove(convertTask);
         }
 
         private async Task<bool> IsWebShareSupportedAsync()
         {
-            return (await JS.InvokeAsync<bool>("IsShareSupported"));
+            return (await Js.InvokeAsync<bool>("IsShareSupported"));
         }
 
         private async Task ShareItineraryFile(ConvertTask task)
         {
             string payload = Convert.ToBase64String(task.ConvertedItineraryFile.ToZipArchiveStream().ToArray());
 
-            if (await JS.InvokeAsync<bool>("CanShareThisFile", $"{task.ConvertOptions.RouteName}.mvitinerary", "application/octet-stream", $"data:text/plain;base64,{payload}"))
+            if (await Js.InvokeAsync<bool>("CanShareThisFile", $"{task.ConvertOptions.RouteName}.mvitinerary", "application/octet-stream", $"data:text/plain;base64,{payload}"))
             {
                 try
                 {
-                    await JS.InvokeVoidAsync("ShareFile", "Share Itinerary File", task.ConvertOptions.RouteName, $"{task.ConvertOptions.RouteName}.mvitinerary", "application/octet-stream", $"data:text/plain;base64,{payload}");
+                    await Js.InvokeVoidAsync("ShareFile", "Share Itinerary File", task.ConvertOptions.RouteName, $"{task.ConvertOptions.RouteName}.mvitinerary", "application/octet-stream", $"data:text/plain;base64,{payload}");
                 }
                 catch (JSException ex)
                 {
-                    if (ex.Message != null && ex.Message.Contains("Permission denied"))
+                    if (ex.Message.Contains("Permission denied"))
                     {
                         Snackbar.Add("Sorry! - Your Browser does not support sharing of this type of file!", Severity.Error);
                     }

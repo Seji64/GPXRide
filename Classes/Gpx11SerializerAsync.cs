@@ -10,12 +10,12 @@ namespace GPXRide.Classes
     {
         public static async Task<GpxFile> DeserializeAsync(Stream stream)
         {
-            using var streamReader = new StreamReader(stream);
-            var data = await streamReader.ReadToEndAsync();
-            var xmlSerializer = new XmlSerializer(typeof(GpxFile));
+            using StreamReader streamReader = new StreamReader(stream);
+            string data = await streamReader.ReadToEndAsync();
+            XmlSerializer xmlSerializer = new XmlSerializer(typeof(GpxFile));
 
-            using var stringReader = new StringReader(data);
-            var gpxFile = (GpxFile)xmlSerializer.Deserialize(stringReader);
+            using StringReader stringReader = new StringReader(data);
+            GpxFile gpxFile = (GpxFile)xmlSerializer.Deserialize(stringReader);
             return gpxFile;
         }
     }

@@ -1,26 +1,26 @@
 using System;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace GPXRide.Classes
 {
     public class Stop
     {
-        [JsonProperty("date")]
+        [JsonPropertyName("date")]
         public DateTime Date { get; set; } = DateTime.Now;
 
-        [JsonProperty("isMyPosition")]
+        [JsonPropertyName("isMyPosition")]
         public bool IsMyPosition { get; set; }
 
-        [JsonProperty("latitude")]
+        [JsonPropertyName("latitude")]
         public decimal Latitude { get; set; }
 
-        [JsonProperty("city")]
+        [JsonPropertyName("city")]
         public string City { get; set; }
 
-        [JsonProperty("longitude")]
+        [JsonPropertyName("longitude")]
         public decimal Longitude { get; set; }
 
-        [JsonProperty("address")]
+        [JsonPropertyName("address")]
         public string Address { get; set; }
     }
 }

@@ -1,23 +1,23 @@
 using System.IO;
 using System.IO.Compression;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+using System.Text;
+using System.Text.Json;
 
 namespace GPXRide.Classes
 {
     public class ItineraryFile
     {
-        public Itinerary Itinerary { get; set; } = new();
+        public Itinerary Itinerary { get; } = new();
         public MemoryStream ToZipArchiveStream()
         {
             MemoryStream memoryStream = new();
 
-            using var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true);
-            var demoFile = archive.CreateEntry("itinerary.json");
+            using ZipArchive archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true);
+            ZipArchiveEntry demoFile = archive.CreateEntry("itinerary.json");
 
-            using var entryStream = demoFile.Open();
-            var ItineraryText = JsonConvert.SerializeObject(Itinerary, new IsoDateTimeConverter() { DateTimeFormat = "yyyy-MM-ddTHH:mm:ssZ" });
-            MemoryStream stream = new(System.Text.Encoding.UTF8.GetBytes(ItineraryText));
+            using Stream entryStream = demoFile.Open();
+            string itineraryText = JsonSerializer.Serialize(Itinerary, new JsonSerializerOptions() { Converters = { new JsonDateTimeConverter() }});
+            MemoryStream stream = new(Encoding.UTF8.GetBytes(itineraryText));
             stream.WriteTo(entryStream);
 
             return memoryStream;
