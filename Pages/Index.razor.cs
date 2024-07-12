@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using BlazorDownloadFile;
+using Geo.Gps.Serialization;
 using Geo.Gps.Serialization.Xml.Gpx.Gpx11;
 using GPXRide.Classes;
 using GPXRide.Enums;
+using GPXRide.Interfaces;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
@@ -18,7 +23,7 @@ namespace GPXRide.Pages
     public partial class Index
     {
         [Inject] IBlazorDownloadFileService BlazorDownloadFileService { get; set; }
-        readonly List<ConvertTask> _convertTasks = [];
+        readonly List<IConvertTask> _convertTasks = [];
         private bool _webShareSupported;
 
         protected override async Task OnInitializedAsync()
@@ -28,11 +33,37 @@ namespace GPXRide.Pages
             _webShareSupported = await IsWebShareSupportedAsync();
             await base.OnInitializedAsync();
         }
-        private static async Task ConvertToItinerary(ConvertTask convertTask)
+
+        private static async Task ConvertToGpx(TripToGpxConvertTask convertTask)
+        {
+            convertTask.State = ConvertState.Working;
+            convertTask.ConvertedGpxFile = await Task.Run(() =>
+            {
+                try
+                {
+                    GpxFile gpxFile = new GpxFile
+                    {
+                        wpt = convertTask.OriginalTripFile.GpsRows.AsParallel().AsOrdered().Select(x => new GpxWaypoint() { lat = (decimal)x.Latitude, lon = (decimal)x.Longitude, name = x.Index.ToString()}).ToArray()
+                    };
+
+                    return gpxFile;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("{ErrorMessage}", ex.Message);
+                    return null;
+                }
+            });
+            
+            await Task.Delay(500);
+            convertTask.State = convertTask.ConvertedGpxFile != null ? ConvertState.Completed : ConvertState.Error;
+
+        }
+        private static async Task ConvertToItinerary(GpxToItineraryConvertTask gpxToItineraryConvertTask)
         {
 
-            convertTask.State = ConvertState.Working;
-            convertTask.ConvertedItineraryFile = await Task.Run(() =>
+            gpxToItineraryConvertTask.State = ConvertState.Working;
+            gpxToItineraryConvertTask.ConvertedItineraryFile = await Task.Run(() =>
             {
 
                 try
@@ -45,26 +76,26 @@ namespace GPXRide.Pages
                         Length = 1,
                         Duration = 1,
                         VehicleClass = "bike",
-                        Name = convertTask.ConvertOptions.RouteName,
+                        Name = gpxToItineraryConvertTask.ConvertOptions.RouteName,
 
                         Preferences =
                         {
-                            DirtRoads = convertTask.ConvertOptions.DirtyRoads,
-                            Trains = convertTask.ConvertOptions.Trains,
-                            Motorway = convertTask.ConvertOptions.Motorway,
-                            Tunnel = convertTask.ConvertOptions.Tunnel,
-                            TollFree = convertTask.ConvertOptions.TollFree,
-                            Ferry = convertTask.ConvertOptions.Ferry
+                            DirtRoads = gpxToItineraryConvertTask.ConvertOptions.DirtyRoads,
+                            Trains = gpxToItineraryConvertTask.ConvertOptions.Trains,
+                            Motorway = gpxToItineraryConvertTask.ConvertOptions.Motorway,
+                            Tunnel = gpxToItineraryConvertTask.ConvertOptions.Tunnel,
+                            TollFree = gpxToItineraryConvertTask.ConvertOptions.TollFree,
+                            Ferry = gpxToItineraryConvertTask.ConvertOptions.Ferry
                         }
                     }
                     };
-                    SourceType type = convertTask.SourceType;
+                    SourceType type = gpxToItineraryConvertTask.SourceType;
                     Log.Debug("Selected Route Type:{Type}", type.ToString());
                     GpxWaypoint[] waypoints = type switch
                     {
-                        SourceType.Route => convertTask.OriginalGpxFile.rte[0].rtept,
-                        SourceType.Track => convertTask.OriginalGpxFile.trk[0].trkseg[0].trkpt,
-                        SourceType.Waypoints => convertTask.OriginalGpxFile.wpt,
+                        SourceType.Route => gpxToItineraryConvertTask.OriginalGpxFile.rte[0].rtept,
+                        SourceType.Track => gpxToItineraryConvertTask.OriginalGpxFile.trk[0].trkseg[0].trkpt,
+                        SourceType.Waypoints => gpxToItineraryConvertTask.OriginalGpxFile.wpt,
                         _ => throw new InvalidOperationException()
                     };
 
@@ -86,7 +117,7 @@ namespace GPXRide.Pages
 
                         };
 
-                        if (convertTask.ConvertOptions.FirstWaypointAsMyPosition && mItineraryFile.Itinerary.Stops.Count == 0)
+                        if (gpxToItineraryConvertTask.ConvertOptions.FirstWaypointAsMyPosition && mItineraryFile.Itinerary.Stops.Count == 0)
                         {
                             stop.IsMyPosition = true;
                         }
@@ -105,64 +136,150 @@ namespace GPXRide.Pages
             });
 
             await Task.Delay(500);
-            convertTask.State = convertTask.ConvertedItineraryFile != null ? ConvertState.Completed : ConvertState.Error;
+            gpxToItineraryConvertTask.State = gpxToItineraryConvertTask.ConvertedItineraryFile != null ? ConvertState.Completed : ConvertState.Error;
         }
 
-        private void UploadFiles(IReadOnlyList<IBrowserFile> files)
+        private async Task UploadFiles(IReadOnlyList<IBrowserFile> files)
         {
             long maxallowedsize = 2097152;
             bool errorOnUpload = false;
             object @lock = new();
 
-            files.AsParallel().AsOrdered().ForAll(async fileentry =>
+            files.AsParallel().AsOrdered().ForAll(browserFile =>
             {
                 int? id = 0;
 
                 lock (@lock)
                 {
                     id = _convertTasks.Count != 0 ? (_convertTasks[^1].Id + 1) : 0;
-                    _convertTasks.Add(new ConvertTask
+                    
+                    try
                     {
-                        Id = id,
-                        OriginalGpxFile = null,
-                        FileName = Path.GetFileNameWithoutExtension(fileentry.Name)
-                    });
+                        if (Path.GetExtension(browserFile.Name) == ".gpx")
+                        {
+                            _convertTasks.Add(new GpxToItineraryConvertTask
+                            {
+                                Id = id,
+                                InputFile = browserFile,
+                                OriginalGpxFile = null,
+                                FileSourceType = FileSourceType.Gpx,
+                                FileName = Path.GetFileNameWithoutExtension(browserFile.Name)
+                            });
+                        }
+                    
+                        if (Path.GetExtension(browserFile.Name) == ".mvtrip")
+                        {
+                            _convertTasks.Add(new TripToGpxConvertTask
+                            {
+                                Id = id,
+                                InputFile = browserFile,
+                                OriginalTripFile = null,
+                                FileSourceType = FileSourceType.MVTrip,
+                                FileName = Path.GetFileNameWithoutExtension(browserFile.Name)
+                            });
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("{ErrorMessage}", ex.Message);
+                        errorOnUpload = true;
+                        Log.Debug("Removing Convert Task with Id {Id}", id);
+                        _convertTasks.RemoveAll(x => x.Id == id);
+                    }
+                    finally
+                    {
+                        StateHasChanged();
+                    }
                 }
+            });
 
-                StateHasChanged();
+            StateHasChanged();
 
+            foreach (IConvertTask convertTask in  _convertTasks.Where(x => x.FileSourceType == FileSourceType.Gpx))
+            {
                 try
                 {
+                    GpxToItineraryConvertTask entry = (GpxToItineraryConvertTask)convertTask;
                     Log.Debug("Deserialize GPX File...");
-                    GpxFile gpxFile = await Gpx11SerializerAsync.DeserializeAsync(fileentry.OpenReadStream(maxallowedsize));
+                    GpxFile gpxFile = await Gpx11SerializerAsync.DeserializeAsync(entry.InputFile.OpenReadStream(maxallowedsize));
 
                     if (gpxFile != null)
                     {
                         Log.Debug("GPX File deserialized!");
-                        Log.Debug("Attaching GpxFile to ConvertTask with Id {Id}", id);
+                        Log.Debug("Attaching GpxFile to ConvertTask with Id {Id}", entry.Id);
 
-                        _convertTasks.Single(x => x.Id == id).OriginalGpxFile = gpxFile;
+                        entry.OriginalGpxFile = gpxFile;
                         Log.Debug(("Done"));
                     }
                     else
                     {
-                        throw new InvalidOperationException($"Failed to parse Gpx File {fileentry.Name}");
+                        throw new InvalidOperationException($"Failed to parse Gpx File {entry.FileName}");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.Error("{ErrorMessage}", ex.Message);
                     errorOnUpload = true;
-                    Log.Debug("Removing Convert Task with Id {Id}", id);
-                    _convertTasks.RemoveAll(x => x.Id == id);
+                    Log.Error("{ErrorMessage}", ex.Message);
+                    convertTask.State = ConvertState.Error;
                 }
                 finally
                 {
                     StateHasChanged();
                 }
-            });
+               
+            }
 
-            if (!errorOnUpload)
+            foreach (IConvertTask convertTask in _convertTasks.Where(x => x.FileSourceType == FileSourceType.MVTrip))
+            {
+                try
+                {
+                    TripToGpxConvertTask entry = (TripToGpxConvertTask)convertTask;
+                    Log.Debug("Unzipping MvTrip File...");
+                    string extractPath = Path.Combine(Path.GetTempPath(),Path.GetRandomFileName());
+                    string zipPath = Path.GetTempFileName();
+                    
+                    await using (Stream rs = entry.InputFile.OpenReadStream(maxallowedsize))
+                    {
+                        await using (FileStream fs = new FileStream(zipPath, FileMode.OpenOrCreate, FileAccess.Write))
+                        {
+                            await rs.CopyToAsync(fs);
+                        }
+                    }
+                    
+                    ZipFile.ExtractToDirectory(zipPath, extractPath);
+
+                    if (File.Exists(Path.Combine(extractPath, "trip.json")) && File.Exists(Path.Combine(extractPath, "gpsrows.json")))
+                    {
+                        Log.Debug("MVTrip Archive successfully extracted!");
+                        Log.Debug("Deserialize MVTrip Files...");
+                        entry.OriginalTripFile = await JsonSerializer.DeserializeAsync<Trip>(File.OpenRead(Path.Combine(extractPath, "trip.json")));
+                        entry.OriginalTripFile.GpsRows = await JsonSerializer.DeserializeAsync<List<GpsRow>>(File.OpenRead(Path.Combine(extractPath, "gpsrows.json")));
+                        Log.Debug("MVTrip Files successfully deserialized!");
+                        File.Delete(zipPath);
+                        Directory.Delete(extractPath, true);
+                            
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException($"Failed to extract MVTrip File {entry.FileName}");
+                    }
+                    
+                }
+                catch (Exception ex)
+                {
+                    errorOnUpload = true;
+                    Log.Error("{ErrorMessage}", ex.Message);
+                    convertTask.State = ConvertState.Error;
+                }
+                finally
+                {
+                    StateHasChanged();
+                }
+            }
+            
+            _convertTasks.RemoveAll(x => x.State == ConvertState.Error);
+            
+            if (!errorOnUpload && files.Count == _convertTasks.Count)
             {
                 Snackbar.Add("All files successfully uploaded!", Severity.Success);
             }
@@ -193,9 +310,9 @@ namespace GPXRide.Pages
             return routeTypes;
         }
 
-        private void DisposeConvertTask(ConvertTask convertTask)
+        private void DisposeConvertTask(IConvertTask item)
         {
-            _convertTasks.Remove(convertTask);
+            _convertTasks.RemoveAll(x => x.Id == item.Id);
         }
 
         private async Task<bool> IsWebShareSupportedAsync()
@@ -203,7 +320,7 @@ namespace GPXRide.Pages
             return (await Js.InvokeAsync<bool>("IsShareSupported"));
         }
 
-        private async Task ShareItineraryFile(ConvertTask task)
+        private async Task ShareItineraryFile(GpxToItineraryConvertTask task)
         {
             string payload = Convert.ToBase64String(task.ConvertedItineraryFile.ToZipArchiveStream().ToArray());
 
@@ -212,6 +329,30 @@ namespace GPXRide.Pages
                 try
                 {
                     await Js.InvokeVoidAsync("ShareFile", "Share Itinerary File", task.ConvertOptions.RouteName, $"{task.ConvertOptions.RouteName}.mvitinerary", "application/octet-stream", $"data:text/plain;base64,{payload}");
+                }
+                catch (JSException ex)
+                {
+                    if (ex.Message.Contains("Permission denied"))
+                    {
+                        Snackbar.Add("Sorry! - Your Browser does not support sharing of this type of file!", Severity.Error);
+                    }
+                }
+            }
+            else
+            {
+                Snackbar.Add("Sorry! - Your Browser does not support sharing of this type of file!", Severity.Error);
+            }
+        }
+        
+        private async Task ShareGpxFile(TripToGpxConvertTask task)
+        {
+            string payload = await Gpx11SerializerAsync.SerializeAsync(task.ConvertedGpxFile);
+
+            if (await Js.InvokeAsync<bool>("CanShareThisFile", $"{task.OriginalTripFile.Title}.gpx", "application/octet-stream", $"data:text/plain;base64,{payload}"))
+            {
+                try
+                {
+                    await Js.InvokeVoidAsync("ShareFile", "Share Itinerary File", task.OriginalTripFile.Title, $"{task.OriginalTripFile.Title}.mvitinerary", "application/octet-stream", $"data:text/plain;base64,{payload}");
                 }
                 catch (JSException ex)
                 {

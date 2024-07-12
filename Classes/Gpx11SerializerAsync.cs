@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -17,6 +18,14 @@ namespace GPXRide.Classes
             using StringReader stringReader = new StringReader(data);
             GpxFile gpxFile = (GpxFile)xmlSerializer.Deserialize(stringReader);
             return gpxFile;
+        }
+        
+        public static async Task<string> SerializeAsync(GpxFile file)
+        {
+            using MemoryStream memoryStream = new();
+            XmlSerializer xmlSerializer = new XmlSerializer(typeof(GpxFile));
+            xmlSerializer.Serialize(memoryStream, file);
+            return await Task.FromResult(Convert.ToBase64String(memoryStream.ToArray()));
         }
     }
 }
