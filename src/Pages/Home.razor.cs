@@ -67,7 +67,7 @@ public partial class Home
                                     _convertTasks.Add(new GpxToItineraryConvertTask
                                     {
                                         Id = id,
-                                        InputStream = await file.StreamAsync(),
+                                        InputStream = memoryStream,
                                         SourceType = SourceType.Gpx,
                                         FileName = Path.GetFileNameWithoutExtension(await file.GetNameAsync()),
                                         State = ConvertState.PreparePending
