@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 using GPXRide;
+using PatrickJahr.Blazor.FileHandling;
 using PatrickJahr.Blazor.PwaUpdate;
 using Serilog;
 using Serilog.Core;
@@ -27,6 +28,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddMudServices();
 builder.Services.AddWebShare();
 builder.Services.AddBlazorDownloadFile();
+builder.Services.AddFileHandlingService();
 builder.Services.AddUpdateService();
 
 await builder.Build().RunAsync();

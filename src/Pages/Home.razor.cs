@@ -6,6 +6,7 @@ using GPXRide.Helpers;
 using GPXRide.Interfaces;
 using GPXRide.Models;
 using GPXRide.Models.MvRide;
+using KristofferStrube.Blazor.FileSystem;
 using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
 using Serilog;
@@ -21,6 +22,7 @@ public partial class Home
     private MudFileUpload<IReadOnlyList<IBrowserFile>>? _fileUpload;
     private bool _uploading;
     private readonly List<IConvertTask> _convertTasks = [];
+    private bool _pwaFileHandlingSupported;
 
     private Task OpenFilePickerAsync()
         => _fileUpload?.OpenFilePickerAsync() ?? Task.CompletedTask;
@@ -36,6 +38,35 @@ public partial class Home
         _browserFiles.Clear();
         ClearDragClass();
     }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _pwaFileHandlingSupported = await FileHandlingService.IsSupportedAsync();
+
+        if (_pwaFileHandlingSupported)
+        {
+            await FileHandlingService.SetConsumerAsync(async (launchParams) =>
+            {
+                foreach (FileSystemHandle fileSystemHandle in launchParams.Files)
+                {
+                    if (fileSystemHandle is FileSystemFileHandle fileSystemFileHandle)
+                    {
+                        var file = await fileSystemFileHandle.GetFileAsync();
+
+                        
+                        
+                        var text1 = await file.TextAsync();
+                        Console.WriteLine(text1);
+
+                        var bytes = await file.ArrayBufferAsync();
+                        var text2 = System.Text.Encoding.UTF8.GetString(bytes);
+                        Console.WriteLine(text2);
+                    }
+                }
+            });
+        }
+    }
+
     private void OnInputFileChanged(InputFileChangeEventArgs e)
     {
         ClearDragClass();

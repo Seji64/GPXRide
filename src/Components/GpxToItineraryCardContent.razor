@@ -5,14 +5,14 @@
     <MudText Typo="Typo.body1" GutterBottom="true">Route Preferences</MudText>
     <MudGrid>
         <MudItem xs="6">
-            <MudCheckBox @bind-Value="Task.ItineryGpxConvertOptions.Motorway" Label="Motorway" Dense="true"></MudCheckBox>
-            <MudCheckBox @bind-Value="Task.ItineryGpxConvertOptions.TollFree" Label="Toll Free" Dense="true"></MudCheckBox>
-            <MudCheckBox @bind-Value="Task.ItineryGpxConvertOptions.DirtyRoads" Label="Dirty Roads" Dense="true"></MudCheckBox>
+            <MudCheckBox T="bool" @bind-Value="Task.ItineryGpxConvertOptions.Motorway" Label="Motorway" Dense="true"/>
+            <MudCheckBox T="bool" @bind-Value="Task.ItineryGpxConvertOptions.TollFree" Label="Toll Free" Dense="true"/>
+            <MudCheckBox T="bool" @bind-Value="Task.ItineryGpxConvertOptions.DirtyRoads" Label="Dirty Roads" Dense="true"/>
         </MudItem>
         <MudItem xs="3">
-            <MudCheckBox @bind-Value="Task.ItineryGpxConvertOptions.Tunnel" Label="Tunnel" Dense="true"></MudCheckBox>
-            <MudCheckBox @bind-Value="Task.ItineryGpxConvertOptions.Trains" Label="Trains" Dense="true"></MudCheckBox>
-            <MudCheckBox @bind-Value="Task.ItineryGpxConvertOptions.Ferry" Label="Ferry" Dense="true"></MudCheckBox>
+            <MudCheckBox T="bool" @bind-Value="Task.ItineryGpxConvertOptions.Tunnel" Label="Tunnel" Dense="true"/>
+            <MudCheckBox T="bool" @bind-Value="Task.ItineryGpxConvertOptions.Trains" Label="Trains" Dense="true"/>
+            <MudCheckBox T="bool" @bind-Value="Task.ItineryGpxConvertOptions.Ferry" Label="Ferry" Dense="true"/>
         </MudItem>
     </MudGrid>
     
@@ -29,22 +29,22 @@
     @if (GetSourceTypes().Count >= 2)
     {
         <MudText class="mb-2" Typo="Typo.body1">Select Source Type</MudText>
-        <MudChipSet T="GpxSourceType?" @bind-SelectedValue="Task.GpxSourceType" CheckMark="true" SelectionMode="SelectionMode.SingleSelection">
+        <MudChipSet @bind-SelectedValue="SelectedGpxSourceType" SelectionMode="SelectionMode.SingleSelection" CheckMark="true">
             @if (Task.OriginalGpxFile.wpt != null && Task.OriginalGpxFile.wpt.Any())
             {
-                <MudChip Icon="@Icons.Material.Filled.LocationOn" Color="Color.Success" Value="GpxSourceType.Waypoints" Text="Waypoints" Default="true">Waypoints</MudChip>
+                <MudChip Icon="@Icons.Material.Filled.LocationOn" Color="Color.Success" Value="GpxSourceType.Waypoints" Text="Waypoints">Waypoints</MudChip>
             }
             @if (Task.OriginalGpxFile.trk != null && Task.OriginalGpxFile.trk.Any())
             {
-                <MudChip Icon="@Icons.Material.Filled.LinearScale" Color="Color.Secondary" Value="GpxSourceType.Track" Text="Track" Default="true">Track</MudChip>
+                <MudChip Icon="@Icons.Material.Filled.LinearScale" Color="Color.Secondary" Value="GpxSourceType.Track" Text="Track">Track</MudChip>
             }
             @if (Task.OriginalGpxFile.rte != null && Task.OriginalGpxFile.rte.Any())
             {
-                <MudChip Icon="@Icons.Material.Filled.AltRoute" Color="Color.Info" Text="Route" Value="GpxSourceType.Route" Default="true">Route</MudChip>
+                <MudChip Icon="@Icons.Material.Filled.AltRoute" Color="Color.Info" Text="Route" Value="GpxSourceType.Route">Route</MudChip>
             }
         </MudChipSet>
 
         <MudDivider DividerType="DividerType.Middle" Class="my-4" />
     }
-    <MudTextField @bind-Value="Task.ItineryGpxConvertOptions.RouteName" Label="Route Name" Variant="Variant.Outlined" Margin="Margin.Dense"></MudTextField>
+    <MudTextField @bind-Value="Task.ItineryGpxConvertOptions.RouteName" Label="Route Name" Variant="Variant.Outlined" Margin="Margin.Dense"/>
 }
