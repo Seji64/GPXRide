@@ -1,0 +1,19 @@
+﻿@inherits LayoutComponentBase
+<MudThemeProvider/>
+<MudPopoverProvider/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudAvatar Size="Size.Medium" Class="ma-2">
+            <MudImage Src="icon-192.png" />
+        </MudAvatar>
+        <MudText Typo="Typo.h5" Class="ml-3">GPXRide</MudText>
+        <MudSpacer/>
+        <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/Seji64/GPXRide"/>
+    </MudAppBar>
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</MudLayout>

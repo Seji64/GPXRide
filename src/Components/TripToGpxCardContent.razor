@@ -1,0 +1,19 @@
+@inherits MudComponentBase
+
+@if (Task.OriginalMvTripFile != null)
+{
+    <MudGrid>
+        <MudItem xs="6">
+            <MudField AdornmentIcon="@Icons.Material.Outlined.Speed" Adornment="Adornment.Start" Variant="Variant.Text">@Math.Round(Task.OriginalMvTripFile.AvgSpeedKmh,2) km/h</MudField>
+            <MudField AdornmentIcon="@Icons.Material.Outlined.TextRotationAngledown" Adornment="Adornment.Start" Variant="Variant.Text">@Task.OriginalMvTripFile.MaxRollAngle °</MudField>
+            <MudField AdornmentIcon="@Icons.Material.Outlined.MultilineChart" Adornment="Adornment.Start" Variant="Variant.Text">@Task.OriginalMvTripFile.MaxThrottle %</MudField>
+                                        
+        </MudItem>
+        <MudItem xs="6">
+            <MudField AdornmentIcon="@Icons.Material.Outlined.SocialDistance" Adornment="Adornment.Start" Variant="Variant.Text">@(Task.OriginalMvTripFile.TotalDistanceInMeters/ 1000 ) Km</MudField>
+            <MudField AdornmentIcon="@Icons.Material.Outlined.Timer" Adornment="Adornment.Start" Variant="Variant.Text">@Math.Round(TimeSpan.FromSeconds(Task.OriginalMvTripFile.TotalTimeInSeconds).TotalMinutes,2) Minutes</MudField>
+            <MudField AdornmentIcon="@Icons.Material.Outlined.Badge" Adornment="Adornment.Start" Variant="Variant.Text">@Task.OriginalMvTripFile.BikeModel</MudField>
+        </MudItem>
+    </MudGrid>
+}
+

@@ -1,0 +1,80 @@
+@inherits MudComponentBase
+@inject IWebShareService WebShareService
+@inject IBlazorDownloadFileService  BlazorDownloadFileService
+@inject ISnackbar Snackbar
+
+<MudCard>
+    @if (IsOriginalFileNullOrEmpty())
+    {
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudSkeleton Width="300px" />
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="250px" />
+        <MudCardContent>
+            <MudSkeleton Animation="Animation.Wave" />
+        </MudCardContent>
+        <MudCardActions>
+            <MudSkeleton SkeletonType="SkeletonType.Circle" Height="30px" Width="30px" Class="ml-2 mb-2" />
+            <MudSkeleton SkeletonType="SkeletonType.Circle" Height="30px" Width="30px" Class="ml-3 mb-2" />
+        </MudCardActions>
+    }
+    else
+    {
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h5">@(GetTitle() ?? "Empty")</MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Default" OnClick="@(() => CloseConvertTask(ConvertTask))" />
+            </CardHeaderActions>
+        </MudCardHeader>
+        <MudCardContent>
+            
+            @switch (ConvertTask.SourceType)
+            {
+                case SourceType.Gpx:
+                    <CascadingValue Value="(GpxToItineraryConvertTask)ConvertTask">
+                        <GpxToItineraryCardContent/>
+                    </CascadingValue>
+                    break; 
+                case SourceType.MvTrip:
+                    <CascadingValue Value="(TripToGpxConvertTask)ConvertTask">
+                        <TripToGpxCardContent/>
+                    </CascadingValue>
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            
+        </MudCardContent>
+        <MudCardActions>
+
+            @switch (ConvertTask.State)
+            {
+                case ConvertState.Working:
+                    <MudChip T="string" Class="mr-2" Icon="@Icons.Material.Filled.HourglassBottom" Color="Color.Info">Converting...</MudChip>
+                    <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true" />
+                    break;
+                case ConvertState.Completed:
+                    <MudChip T="string" Icon="@Icons.Material.Filled.Check" Color="Color.Success">Conversion successful</MudChip>
+                    <MudIconButton OnClick="() => DownloadShareConvertedFileAsync(ConvertTask)" Icon="@Icons.Material.Filled.FileDownload" Color="Color.Primary" aria-label="Download" />
+                    @if (_isWebShareAPiSupported)
+                    {
+                        <MudIconButton OnClick="() => DownloadShareConvertedFileAsync(ConvertTask,true)" Icon="@Icons.Material.Filled.Share" aria-label="Share" Color="Color.Info" />
+                    }
+                    break;
+                case ConvertState.Error:
+                    <MudChip T="string" Icon="@Icons.Material.Filled.Warning" Color="Color.Error">Conversion failed</MudChip>
+                    <MudIconButton OnClick="() => ConvertFileAsync(ConvertTask)" Icon="@Icons.Material.Filled.Refresh" aria-label="Retry" Color="Color.Info" />
+                    break;
+                case ConvertState.None:
+                default:
+                    <MudButton OnClick="() => ConvertFileAsync(ConvertTask)" Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.Send">@GetButtonLabel(ConvertTask)</MudButton>
+                    break;
+            }
+            
+        </MudCardActions>
+    }
+</MudCard>

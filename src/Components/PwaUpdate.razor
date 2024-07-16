@@ -1,0 +1,13 @@
+@inherits MudComponentBase
+@using PatrickJahr.Blazor.PwaUpdate.Services
+@inject IUpdateService UpdateService
+
+@if (_newVersionAvailable)
+{
+    <MudAlert Class="mb-4" Severity="Severity.Info" ContentAlignment="HorizontalAlignment.Center">
+        <MudStack Spacing="2">
+            <MudText>Eine neue Version ist verfügbar!</MudText>
+            <MudButton Variant="Variant.Outlined" OnClick="UpdatePwaVersion">Jetzt updaten</MudButton>
+        </MudStack>
+    </MudAlert>
+}

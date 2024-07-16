@@ -1,0 +1,94 @@
+﻿@page "/"
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8">
+
+    <PwaUpdate/>
+    
+    <MudStack AlignItems="AlignItems.Center" Spacing="4">
+        
+        <MudStack Style="width: 100%">
+            <MudFileUpload T="IReadOnlyList<IBrowserFile>"
+                           @ref="@_fileUpload"
+                           OnFilesChanged="OnInputFileChanged"
+                           AppendMultipleFiles
+                           Accept=".gpx, .mvtrip"
+                           Hidden="@false"
+                           InputClass="absolute mud-width-full mud-height-full overflow-hidden z-10"
+                           InputStyle="opacity:0"
+                           tabindex="-1"
+                           @ondrop="@ClearDragClass"
+                           @ondragenter="@SetDragClass"
+                           @ondragleave="@ClearDragClass"
+                           @ondragend="@ClearDragClass">
+                <ActivatorContent>
+                    <MudPaper Height="200px"
+                              Outlined="true"
+                              Class="@_dragClass">
+                        <MudText Typo="Typo.body1" Align="Align.Center">
+                            Upload here your <pre>mvtrip</pre> or <pre>gpx</pre> files in order to convert them
+                        </MudText>
+                        @foreach (IBrowserFile file in _browserFiles)
+                        {
+                            <MudChip T="string"
+                                     Color="Color.Secondary"
+                                     Text="@file.Name"
+                                     tabindex="-1"/>
+                        }
+                    </MudPaper>
+                </ActivatorContent>
+            </MudFileUpload>
+            <MudToolBar Gutters="@false"
+                        Class="relative d-flex justify-end gap-4">
+                <MudButton Color="Color.Primary"
+                           Disabled="@_uploading"
+                           Size="Size.Small"
+                           OnClick="@OpenFilePickerAsync"
+                           StartIcon="@Icons.Material.Filled.FolderOpen"
+                           Variant="Variant.Filled">
+                    Select file(s)
+                </MudButton>
+                <MudButton Color="Color.Primary"
+                           Size="Size.Small"
+                           Disabled="@(!_browserFiles.Any() || _uploading)"
+                           StartIcon="@Icons.Material.Filled.UploadFile"
+                           OnClick="@UploadAsync"
+                           Variant="Variant.Filled">
+                    @if (_uploading)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                        <MudText Class="ms-2">Uploading...</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.inherit">Upload</MudText>
+                    }
+                </MudButton>
+                <MudButton Color="Color.Error"
+                           Size="Size.Small"
+                           Disabled="@(!_browserFiles.Any() || _uploading)"
+                           OnClick="@ClearAllFilesAsync"
+                           StartIcon="@Icons.Material.Filled.Clear"
+                           Variant="Variant.Filled">
+                    Clear
+                </MudButton>
+            </MudToolBar>
+        </MudStack>
+
+        <MudDivider Class="my-6" />
+        
+        <MudGrid>
+
+            @foreach (IConvertTask convertTask in _convertTasks)
+            {
+                <MudItem xs="16" sm="6">
+                    <CascadingValue Value="convertTask">
+                        <ConvertTaskCard CloseConvertTask="DisposeConvertTask"/>
+                    </CascadingValue>
+                </MudItem>
+            }
+            
+        </MudGrid>
+        
+    </MudStack>
+</MudContainer>
