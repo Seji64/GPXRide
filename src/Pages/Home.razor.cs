@@ -49,20 +49,57 @@ public partial class Home
             {
                 foreach (FileSystemHandle fileSystemHandle in launchParams.Files)
                 {
-                    if (fileSystemHandle is FileSystemFileHandle fileSystemFileHandle)
+                    try
                     {
-                        var file = await fileSystemFileHandle.GetFileAsync();
-
+                        if (fileSystemHandle is FileSystemFileHandle fileSystemFileHandle)
+                        {
+                            int id = _convertTasks.Count != 0 ? (_convertTasks[^1].Id + 1) : 0;
                         
+                            KristofferStrube.Blazor.FileAPI.File file = await fileSystemFileHandle.GetFileAsync();
+                            
+                            MemoryStream memoryStream = new(await file.ArrayBufferAsync());
+                            await memoryStream.FlushAsync();
+                            memoryStream.Seek(0, SeekOrigin.Begin);
                         
-                        var text1 = await file.TextAsync();
-                        Console.WriteLine(text1);
-
-                        var bytes = await file.ArrayBufferAsync();
-                        var text2 = System.Text.Encoding.UTF8.GetString(bytes);
-                        Console.WriteLine(text2);
+                            switch (Path.GetExtension(await file.GetNameAsync()))
+                            {
+                                case ".gpx":
+                                    _convertTasks.Add(new GpxToItineraryConvertTask
+                                    {
+                                        Id = id,
+                                        InputStream = await file.StreamAsync(),
+                                        SourceType = SourceType.Gpx,
+                                        FileName = Path.GetFileNameWithoutExtension(await file.GetNameAsync()),
+                                        State = ConvertState.PreparePending
+                                    });
+                                    break;
+                                
+                                case ".mvtrip":
+                                    _convertTasks.Add(new TripToGpxConvertTask
+                                    {
+                                        Id = id,
+                                        InputStream = memoryStream,
+                                        SourceType = SourceType.MvTrip,
+                                        FileName = Path.GetFileNameWithoutExtension(await file.GetNameAsync()),
+                                        State = ConvertState.PreparePending
+                                    });
+                                    break;
+                                default:
+                                    await memoryStream.DisposeAsync();
+                                    Log.Warning("Filetype not handled!");
+                                    break;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("[PWAFileHandle] {ErrorMessage}",ex.Message);
                     }
                 }
+
+                if (_convertTasks.Count <= 0) return;
+                await PrepareConvertTasksAsync();
+
             });
         }
     }
@@ -93,7 +130,7 @@ public partial class Home
                         _convertTasks.Add(new GpxToItineraryConvertTask
                         {
                             Id = id,
-                            InputFile = browserFile,
+                            InputStream = browserFile.OpenReadStream(),
                             SourceType = SourceType.Gpx,
                             FileName = Path.GetFileNameWithoutExtension(browserFile.Name),
                             State = ConvertState.PreparePending
@@ -103,7 +140,7 @@ public partial class Home
                         _convertTasks.Add(new TripToGpxConvertTask
                         {
                             Id = id,
-                            InputFile = browserFile,
+                            InputStream = browserFile.OpenReadStream(),
                             SourceType = SourceType.MvTrip,
                             FileName = Path.GetFileNameWithoutExtension(browserFile.Name),
                             State = ConvertState.PreparePending
@@ -149,7 +186,7 @@ public partial class Home
                         GpxToItineraryConvertTask gpxToItineraryConvertTask = (GpxToItineraryConvertTask)convertTask;
                         GpxFile? gpxFile =
                             await GpxHelper.DeserializeAsync(
-                                gpxToItineraryConvertTask.InputFile.OpenReadStream(cancellationToken: cancellationToken));
+                                gpxToItineraryConvertTask.InputStream);
                         if (gpxFile == null)
                         {
                             throw new InvalidOperationException($"Failed to parse Gpx File {gpxToItineraryConvertTask.FileName}");
@@ -160,18 +197,19 @@ public partial class Home
                         {
                             RouteName =  gpxToItineraryConvertTask.FileName
                         };
-                        
+
+                        await gpxToItineraryConvertTask.InputStream.DisposeAsync();
                         gpxToItineraryConvertTask.State = ConvertState.Prepared;
                         
                         break;
                         
                     case SourceType.MvTrip:
-                            
+                        
                         TripToGpxConvertTask tripToGpxConvertTask = (TripToGpxConvertTask)convertTask;
                         string extractPath = Path.Combine(Path.GetTempPath(),Path.GetRandomFileName());
                         string zipPath = Path.GetTempFileName();
                             
-                        await using (Stream rs = tripToGpxConvertTask.InputFile.OpenReadStream(cancellationToken: cancellationToken))
+                        await using (Stream rs = tripToGpxConvertTask.InputStream)
                         {
                             await using (FileStream fs = new FileStream(zipPath, FileMode.OpenOrCreate, FileAccess.Write))
                             {
@@ -193,12 +231,15 @@ public partial class Home
                         {
                             tripToGpxConvertTask.OriginalMvTripFile.GpsRows = await JsonSerializer.DeserializeAsync<List<GpsRow>>(File.OpenRead(Path.Combine(extractPath, "gpsrows.json")), cancellationToken: cancellationToken);    
                         }
-
+                        
+                        await tripToGpxConvertTask.InputStream.DisposeAsync();
                         tripToGpxConvertTask.State = ConvertState.Prepared;
+                        
                         File.Delete(zipPath);
                         Directory.Delete(extractPath, true);
-                            
+                        
                         break;
+                    
                     default:
                         Log.Warning("Unknown Source Type");
                         throw new ArgumentOutOfRangeException();
@@ -206,17 +247,18 @@ public partial class Home
             }
             catch (Exception ex)
             {
-                Log.Error("[PrepareConvertTasks] {ErrorMessage}", ex.Message);
+                Log.Error("[PrepareConvertTasks] {ErrorMessage}", ex.ToString());
                 convertTask.State = ConvertState.Error;
             }
         }
         
         if (_convertTasks.Any(x => x.State == ConvertState.Error))
         {
-            _convertTasks.Where(x => x.State == ConvertState.Error).ToList().ForEach( x => Snackbar.Add($"Failed to prepare/process {x.InputFile.Name}", Severity.Error));
+            _convertTasks.Where(x => x.State == ConvertState.Error).ToList().ForEach( x => Snackbar.Add($"Failed to prepare/process {x.FileName}", Severity.Error));
         }
         
         _convertTasks.RemoveAll(x => x.State == ConvertState.Error);
+        await InvokeAsync(StateHasChanged);
     }
     
     private void DisposeConvertTask(IConvertTask item)

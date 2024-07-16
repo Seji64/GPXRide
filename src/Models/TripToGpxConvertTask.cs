@@ -9,7 +9,7 @@ namespace GPXRide.Models
     public class TripToGpxConvertTask: IConvertTask
     {
         public required int Id { get; init; }
-        public required IBrowserFile InputFile { get; init; }
+        public required Stream InputStream { get; init; }
         public required SourceType SourceType { get; init; }
         public required string FileName { get; init; }
         public ConvertState State { get; set; } = ConvertState.None;
