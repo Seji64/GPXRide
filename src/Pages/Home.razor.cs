@@ -206,7 +206,7 @@ public partial class Home
                     case SourceType.MvTrip:
                         
                         TripToGpxConvertTask tripToGpxConvertTask = (TripToGpxConvertTask)convertTask;
-                        string extractPath = Path.Combine(Path.GetTempPath(),Path.GetRandomFileName());
+                        string extractPath = Directory.CreateTempSubdirectory().FullName;
                         string zipPath = Path.GetTempFileName();
                             
                         await using (Stream rs = tripToGpxConvertTask.InputStream)
@@ -216,9 +216,17 @@ public partial class Home
                                 await rs.CopyToAsync(fs, cancellationToken);
                             }
                         }
-                            
-                        ZipFile.ExtractToDirectory(zipPath, extractPath);
-
+                        
+                        using (ZipArchive zip = ZipFile.OpenRead(zipPath))
+                        {
+                            List<string> filesToExtract = ["trip.json", "gpsrows.json"];
+                            foreach (string file in filesToExtract)
+                            {
+                                ZipArchiveEntry? entry = zip.Entries.FirstOrDefault(x => x.Name == file);
+                                entry?.ExtractToFile(Path.Combine(extractPath,file), true);
+                            }
+                        }
+                        
                         if (!File.Exists(Path.Combine(extractPath, "trip.json")) ||
                             !File.Exists(Path.Combine(extractPath, "gpsrows.json")))
                         {

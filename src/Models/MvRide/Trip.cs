@@ -36,7 +36,7 @@ public class Trip
     [JsonPropertyName("startDate")]
     public string StartDate { get; set; }
     [JsonPropertyName("maxSpeedKmh")]
-    public int MaxSpeedKmh { get; set; }
+    public double MaxSpeedKmh { get; set; }
     [JsonPropertyName("imageName")]
     public string ImageName { get; set; }
     [JsonPropertyName("totalDistanceInMeters")]

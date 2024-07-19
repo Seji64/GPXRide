@@ -11,7 +11,7 @@ public class GpsRow
     [JsonPropertyName("index")]
     public int Index { get; set; }
     [JsonPropertyName("engineSpeed")]
-    public int EngineSpeed { get; set; }
+    public double EngineSpeed { get; set; }
     [JsonPropertyName("tripId")]
     public string TripId { get; set; }
     [JsonPropertyName("throttle")]
