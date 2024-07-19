@@ -75,12 +75,26 @@ public partial class ConvertTaskCard : MudComponentBase
             {
                 throw new NullReferenceException("OriginalMvTripFile is null");
             }
-            
-            GpxFile gpxFile = new()
-            {
-                wpt = convertTask.OriginalMvTripFile.GpsRows.AsParallel().AsOrdered().Select(x => new GpxWaypoint() { lat = (decimal)x.Latitude, lon = (decimal)x.Longitude, name = x.Index.ToString()}).ToArray()
-            };
 
+            GpxFile gpxFile = new();
+
+            GpxTrackSegment gpxTrackSegment = new()
+            {
+                trkpt = convertTask.OriginalMvTripFile.GpsRows.AsParallel().AsOrdered().Select(x => new GpxWaypoint()
+                {
+                    lat = (decimal)x.Latitude, lon = (decimal)x.Longitude, name = x.Index.ToString(),
+                    time = DateTime.Parse(x.Time),
+                    timeSpecified = true
+                }).ToArray()
+            };
+            
+            GpxTrack gpxTrack = new()
+            {
+                name = convertTask.OriginalMvTripFile.Title,
+                trkseg = [gpxTrackSegment]
+            };
+            gpxFile.trk = [gpxTrack];
+            
             convertTask.ConvertedGpxFile = gpxFile;
             convertTask.State = ConvertState.Completed;
 
