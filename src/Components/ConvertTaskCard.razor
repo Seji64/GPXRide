@@ -1,5 +1,4 @@
 @inherits MudComponentBase
-@inject IWebShareService WebShareService
 @inject IBlazorDownloadFileService  BlazorDownloadFileService
 @inject ISnackbar Snackbar
 
@@ -60,10 +59,7 @@
                 case ConvertState.Completed:
                     <MudChip T="string" Icon="@Icons.Material.Filled.Check" Color="Color.Success">Conversion successful</MudChip>
                     <MudIconButton OnClick="() => DownloadShareConvertedFileAsync(ConvertTask)" Icon="@Icons.Material.Filled.FileDownload" Color="Color.Primary" aria-label="Download" />
-                    @if (_isWebShareAPiSupported)
-                    {
-                        <MudIconButton OnClick="() => DownloadShareConvertedFileAsync(ConvertTask,true)" Icon="@Icons.Material.Filled.Share" aria-label="Share" Color="Color.Info" />
-                    }
+                    <MudIconButton OnClick="() => ConvertFileAsync(ConvertTask)" Icon="@Icons.Material.Filled.Refresh" aria-label="Retry" Color="Color.Info" />
                     break;
                 case ConvertState.Error:
                     <MudChip T="string" Icon="@Icons.Material.Filled.Warning" Color="Color.Error">Conversion failed</MudChip>

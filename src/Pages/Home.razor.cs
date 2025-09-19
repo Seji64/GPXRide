@@ -130,7 +130,7 @@ public partial class Home
                         _convertTasks.Add(new GpxToItineraryConvertTask
                         {
                             Id = id,
-                            InputStream = browserFile.OpenReadStream(),
+                            InputStream = browserFile.OpenReadStream(maxAllowedSize: 5000000), // Max Upload 5MB
                             SourceType = SourceType.Gpx,
                             FileName = Path.GetFileNameWithoutExtension(browserFile.Name),
                             State = ConvertState.PreparePending

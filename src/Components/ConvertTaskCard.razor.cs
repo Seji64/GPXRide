@@ -15,14 +15,7 @@ public partial class ConvertTaskCard : MudComponentBase
     [CascadingParameter]
     public required IConvertTask ConvertTask { get; set; }
     [Parameter] public required Action<IConvertTask> CloseConvertTask { get; set; }
-
-    private bool _isWebShareAPiSupported;
-
-    protected override async Task OnInitializedAsync()
-    {
-        _isWebShareAPiSupported = await WebShareService.IsSupportedAsync();
-    }
-
+    
     private bool IsOriginalFileNullOrEmpty()
     {
         return ConvertTask.SourceType switch
@@ -42,9 +35,9 @@ public partial class ConvertTaskCard : MudComponentBase
             _ => throw new InvalidCastException("Unknown type")
         };
     }
-    private string GetButtonLabel(IConvertTask convertTask)
+    private static string GetButtonLabel(IConvertTask convertTask)
     {
-        return ConvertTask.SourceType switch
+        return convertTask.SourceType switch
         {
             SourceType.MvTrip => "Convert to Gpx",
             SourceType.Gpx => "Convert to Itinerary",
@@ -53,7 +46,7 @@ public partial class ConvertTaskCard : MudComponentBase
     }
     private async Task ConvertFileAsync(IConvertTask convertTask)
     {
-        switch (ConvertTask.SourceType)
+        switch (convertTask.SourceType)
         {
             case SourceType.MvTrip:
                 await ConvertToGpxAsync((TripToGpxConvertTask)ConvertTask);
@@ -65,9 +58,11 @@ public partial class ConvertTaskCard : MudComponentBase
                 throw new InvalidCastException("Unknown type");
         }
     }
-    private static async Task ConvertToGpxAsync(TripToGpxConvertTask convertTask)
+    private async Task ConvertToGpxAsync(TripToGpxConvertTask convertTask)
     {
         convertTask.State = ConvertState.Working;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(1000);
         
         try
         {
@@ -108,9 +103,11 @@ public partial class ConvertTaskCard : MudComponentBase
         await Task.CompletedTask;
         
     }
-    private static async Task ConvertToItineraryAsync(GpxToItineraryConvertTask convertTask)
+    private async Task ConvertToItineraryAsync(GpxToItineraryConvertTask convertTask)
     {
         convertTask.State = ConvertState.Working;
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(1000);
         
         try
         {
@@ -195,7 +192,7 @@ public partial class ConvertTaskCard : MudComponentBase
         return await Task.FromResult(GpxHelper.SerializeAsBytes(gpxfile));
     }
     
-    private async Task DownloadShareConvertedFileAsync(IConvertTask convertTask, bool shareFile = false)
+    private async Task DownloadShareConvertedFileAsync(IConvertTask convertTask)
     {
         string filename = string.Empty;
         MemoryStream? payload = null;
@@ -214,7 +211,6 @@ public partial class ConvertTaskCard : MudComponentBase
                 {
                     if (convertTask is TripToGpxConvertTask { ConvertedGpxFile: not null, OriginalMvTripFile: not null } task){
                         payload = await GetPayloadAsync(task.ConvertedGpxFile);
-
                         filename = $"{task.OriginalMvTripFile.Title}.gpx";
                     
                     }
@@ -225,10 +221,7 @@ public partial class ConvertTaskCard : MudComponentBase
                 {
                     if (convertTask is GpxToItineraryConvertTask { ConvertedItinerary: not null, ItineryGpxConvertOptions: not null } task){
                         payload = await GetPayloadAsync(task.ConvertedItinerary);
-
                         filename = $"{task.ItineryGpxConvertOptions.RouteName}.mvitinerary";
-                        
-                        await BlazorDownloadFileService.DownloadFile(filename, payload,"application/octet-stream");
                     }
 
                     break;
@@ -240,14 +233,7 @@ public partial class ConvertTaskCard : MudComponentBase
 
             if (!string.IsNullOrWhiteSpace(filename) && payload is not null)
             {
-                if (shareFile)
-                {
-                    await WebShareService.ShareAsync(filename, filename, $"data:text/plain;base64,{Convert.ToBase64String(payload.ToArray())}");
-                }
-                else
-                {
-                    await BlazorDownloadFileService.DownloadFile(filename, payload,"application/octet-stream");
-                }
+                await BlazorDownloadFileService.DownloadFile(filename, payload,"application/octet-stream");
             }
         }
         catch (Exception ex)
