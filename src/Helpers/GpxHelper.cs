@@ -8,11 +8,11 @@ namespace GPXRide.Helpers
     {
         public static async Task<GpxFile?> DeserializeAsync(Stream stream)
         {
-            using StreamReader streamReader = new StreamReader(stream);
+            using StreamReader streamReader = new(stream);
             string data = await streamReader.ReadToEndAsync();
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(GpxFile));
+            XmlSerializer xmlSerializer = new(typeof(GpxFile));
 
-            using StringReader stringReader = new StringReader(data);
+            using StringReader stringReader = new(data);
             GpxFile? gpxFile = (GpxFile?)xmlSerializer.Deserialize(stringReader);
             return gpxFile;
         }
@@ -20,7 +20,7 @@ namespace GPXRide.Helpers
         public static MemoryStream SerializeAsBytes(GpxFile file)
         {
             MemoryStream memoryStream = new();
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(GpxFile));
+            XmlSerializer xmlSerializer = new(typeof(GpxFile));
             xmlSerializer.Serialize(memoryStream, file);
             memoryStream.Seek(0, SeekOrigin.Begin);
             return memoryStream;

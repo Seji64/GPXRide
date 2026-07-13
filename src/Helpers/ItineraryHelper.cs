@@ -1,5 +1,4 @@
 using System.IO.Compression;
-using System.Text;
 using System.Text.Json;
 using GPXRide.JsonConverters;
 using GPXRide.Models.MvRide;
@@ -12,7 +11,7 @@ public static class ItineraryHelper
     {
         MemoryStream memoryStream = new();
 
-        using ZipArchive archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true);
+        using ZipArchive archive = new(memoryStream, ZipArchiveMode.Create, true);
         ZipArchiveEntry zipArchiveEntry = archive.CreateEntry("itinerary.json");
 
         using Stream entryStream = zipArchiveEntry.Open();

@@ -211,7 +211,7 @@ public partial class Home
                             
                         await using (Stream rs = tripToGpxConvertTask.InputStream)
                         {
-                            await using (FileStream fs = new FileStream(zipPath, FileMode.OpenOrCreate, FileAccess.Write))
+                            await using (FileStream fs = new(zipPath, FileMode.OpenOrCreate, FileAccess.Write))
                             {
                                 await rs.CopyToAsync(fs, cancellationToken);
                             }

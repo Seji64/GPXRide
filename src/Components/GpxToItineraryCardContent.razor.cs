@@ -2,7 +2,6 @@ using GPXRide.Enums;
 using GPXRide.Models;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using Serilog;
 
 namespace GPXRide.Components;
 
