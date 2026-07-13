@@ -2,6 +2,18 @@
 @inject ISnackbar Snackbar
 @inject PatrickJahr.Blazor.FileHandling.FileHandlingService FileHandlingService
 
+<style>
+    .file-upload-input {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: 10;
+        opacity: 0;
+    }
+</style>
+
+
 <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8">
 
     <PwaUpdate/>
@@ -15,15 +27,14 @@
                            AppendMultipleFiles
                            Accept=".gpx, .mvtrip"
                            Hidden="@false"
-                           InputClass="absolute mud-width-full mud-height-full overflow-hidden z-10"
-                           InputStyle="opacity:0"
+                           InputClass="file-upload-input"
                            tabindex="-1"
                            @ondrop="@ClearDragClass"
                            @ondragenter="@SetDragClass"
                            @ondragleave="@ClearDragClass"
                            @ondragend="@ClearDragClass">
-                <ActivatorContent>
-                    <MudPaper Height="200px"
+                <CustomContent>
+                    <MudPaper Height="150px"
                               Outlined="true"
                               Class="@_dragClass">
                         <MudText Typo="Typo.body1" Align="Align.Center">
@@ -37,7 +48,7 @@
                                      tabindex="-1"/>
                         }
                     </MudPaper>
-                </ActivatorContent>
+                </CustomContent>
             </MudFileUpload>
             <MudToolBar Gutters="@false"
                         Class="relative d-flex justify-end gap-4">
