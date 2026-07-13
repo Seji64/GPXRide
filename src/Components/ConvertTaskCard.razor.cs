@@ -119,7 +119,8 @@ public partial class ConvertTaskCard : MudComponentBase
 
             Itinerary itinerary = new()
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = Guid.NewGuid().ToString().ToUpper(),
+                ThumbnailImage = string.Empty,
                 Length = 1,
                 Duration = 1,
                 VehicleClass = "bike",
