@@ -31,5 +31,8 @@ namespace GPXRide.Models.MvRide
 
         [JsonPropertyName("vehicleClass")]
         public string VehicleClass { get; set; }
+        
+        [JsonPropertyName("thumbnailImage")]
+        public string ThumbnailImage { get; set; }
     }
 }
