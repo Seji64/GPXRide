@@ -40,13 +40,6 @@
                         <MudText Typo="Typo.body1" Align="Align.Center">
                             Upload here your <pre>mvtrip</pre> or <pre>gpx</pre> files in order to convert them
                         </MudText>
-                        @foreach (IBrowserFile file in _browserFiles)
-                        {
-                            <MudChip T="string"
-                                     Color="Color.Secondary"
-                                     Text="@file.Name"
-                                     tabindex="-1"/>
-                        }
                     </MudPaper>
                 </CustomContent>
             </MudFileUpload>
